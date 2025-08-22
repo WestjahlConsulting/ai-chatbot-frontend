@@ -1,108 +1,33 @@
 <!DOCTYPE html>
 <html lang="sv">
-<head> 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Chattbot Demo</title>
-  <style> /* demo css bara */ 
-    body {
-      font-family: sans-serif;
-      background: #f3f4f6;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-    }
-    .chatbox {
-      width: 100%;
-      max-width: 600px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      padding: 1rem;
-    }
-    .messages {
-      max-height: 400px;
-      overflow-y: auto;
-      margin-bottom: 1rem;
-    }
-    .message {
-      margin-bottom: 0.75rem;
-    }
-    .bot {
-      background: #e0f2fe;
-      padding: 0.5rem;
-      border-radius: 5px;
-    }
-    .user {
-      text-align: right;
-      background: #d1fae5;
-      padding: 0.5rem;
-      border-radius: 5px;
-    }
-    form {
-      display: flex;
-      gap: 0.5rem;
-    }
-    input {
-      flex: 1;
-      padding: 0.75rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      padding: 0.75rem 1rem;
-      border: none;
-      background: #2563eb;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-  </style>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BotJahl Demo-widget</title>
+  <link rel="stylesheet" href="./styles.css"/>
 </head>
 <body>
-  <h1>Testa vår AI-chattbot</h1>
-  <div class="chatbox">
-    <div class="messages" id="messages"></div>
-    <form id="chat-form">
-      <input type="text" id="user-input" placeholder="Skriv din fråga..." required>
-      <button type="submit">Skicka</button>
-    </form>
-  </div>
+  <main class="container">
+    <h1>Testa vår AI-chattbot</h1>
 
+    <div class="chatcard">
+      <ul id="bot-chat" class="chatlog">
+        <li class="bot">Hej vad kan du hjälpa mig med?</li>
+      </ul>
+
+      <form id="bot-form" class="chatbar">
+        <input id="bot-input" type="text" placeholder="Skriv din fråga..." autocomplete="off"/>
+        <button id="bot-send" type="submit">Skicka</button>
+      </form>
+
+      <p id="bot-status" class="status" hidden></p>
+    </div>
+  </main>
+
+  <!-- Sätt API-basen här om du vill override:a via script-tag i iframen -->
   <script>
-    const messagesEl = document.getElementById('messages');
-    const form = document.getElementById('chat-form');
-    const input = document.getElementById('user-input');
-
-    const apiUrl = 'https://chatbot-api-jahl-bdeqfbb5amfjfabe.westeurope-01.azurewebsites.net/api/chat';
-    const customerId = 'demo'; // Ändra om du vill visa annan företagsbot
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const message = input.value.trim();
-      if (!message) return;
-
-      addMessage('user', message);
-      input.value = '';
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, customerId })
-      });
-
-      const data = await response.json();
-      addMessage('bot', data.reply);
-    });
-
-    function addMessage(sender, text) {
-      const div = document.createElement('div');
-      div.className = `message ${sender}`;
-      div.textContent = text;
-      messagesEl.appendChild(div);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
+    window.BOTJAHL_API_BASE = window.BOTJAHL_API_BASE || "https://chatbot-api-jahl.azurewebsites.net";
   </script>
+  <script src="./app.js"></script>
 </body>
 </html>
