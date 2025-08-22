@@ -4,21 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>BotJahl Demo-widget</title>
+  <!-- Om du har en separat styles.css, behåll länken nedan -->
+  <link rel="stylesheet" href="./styles.css"/>
   <style>
-    * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial; background:#f5f7fb; color:#0f172a; }
-    .container { max-width: 860px; margin: 40px auto; padding: 0 16px; }
-    h1 { text-align:center; font-size: 28px; margin: 0 0 18px; }
-    .chatcard { background:white; border-radius:14px; padding:16px; box-shadow:0 8px 30px rgba(2,6,23,.08); }
-    .chatlog { list-style:none; padding:0; margin:0 0 12px; max-height:60vh; overflow:auto; }
-    .chatlog li { padding:12px 14px; border-radius:10px; margin:10px 0; max-width:85%; line-height:1.35; word-break:break-word; }
-    .chatlog li.user { margin-left:auto; background:#eef2ff; }
-    .chatlog li.bot  { margin-right:auto; background:#dcfce7; }
-    .chatbar { display:flex; gap:10px; }
-    .chatbar input { flex:1; padding:12px 14px; border:1px solid #e5e7eb; border-radius:10px; font-size:16px; }
-    .chatbar button { padding:12px 16px; border:0; border-radius:10px; background:#2563eb; color:white; font-weight:600; cursor:pointer; }
-    .chatbar button:disabled { opacity:.6; cursor:default; }
-    .status { text-align:center; font-size:14px; color:#64748b; margin-top:8px; }
+    /* Minimal fallback-stil om styles.css saknas – kan tas bort */
+    :root { --bg:#f5f7fb; --fg:#0f172a; --card:#ffffff; --blue:#2563eb; --u:#eef2ff; --b:#dcfce7; }
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:var(--bg);color:var(--fg)}
+    .container{max-width:860px;margin:40px auto;padding:0 16px}
+    h1{text-align:center;font-size:28px;margin:0 0 18px}
+    .chatcard{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 8px 30px rgba(2,6,23,.08)}
+    .chatlog{list-style:none;padding:0;margin:0 0 12px;max-height:60vh;overflow:auto}
+    .chatlog li{padding:12px 14px;border-radius:10px;margin:10px 0;max-width:85%;line-height:1.35;word-break:break-word}
+    .chatlog li.user{margin-left:auto;background:var(--u)}
+    .chatlog li.bot{margin-right:auto;background:var(--b)}
+    .chatbar{display:flex;gap:10px}
+    .chatbar input{flex:1;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:16px}
+    .chatbar button{padding:12px 16px;border:0;border-radius:10px;background:var(--blue);color:white;font-weight:600;cursor:pointer}
+    .chatbar button:disabled{opacity:.6;cursor:default}
+    .status{text-align:center;font-size:14px;color:#64748b;margin-top:8px}
   </style>
 </head>
 <body>
@@ -30,77 +33,19 @@
         <li class="bot">Hej! Hur kan jag hjälpa dig idag?</li>
       </ul>
 
-      <form id="bot-form" class="chatbar">
+      <form id="bot-form" class="chatbar" autocomplete="off">
         <input id="bot-input" type="text" placeholder="Skriv din fråga..." autocomplete="off"/>
         <button id="bot-send" type="submit">Skicka</button>
       </form>
 
-      <p id="bot-status" class="status" hidden></p>
+      <p id="bot-status" class="status" hidden>Initierar…</p>
+      <noscript><p class="status">Den här widgeten kräver JavaScript.</p></noscript>
     </div>
   </main>
-
-  <script>
-    // *** VIKTIGT: kör alltid över HTTPS ***
-    // Bas till ditt API (byt till din egen domän om/ när du mappat en)
-    const API_BASE = "https://chatbot-api-jahl.azurewebsites.net";
-
-    // Hämta customerId från querystring (?customerId=1234)
-    const urlParams = new URLSearchParams(window.location.search);
-    const customerId = urlParams.get("customerId") || "1234";
-
-    const form = document.querySelector("#bot-form");
-    const input = document.querySelector("#bot-input");
-    const chat = document.querySelector("#bot-chat");
-    const sendBtn = document.querySelector("#bot-send");
-    const statusEl = document.querySelector("#bot-status");
-
-    function appendBubble(text, who) {
-      const li = document.createElement("li");
-      li.className = who;
-      li.textContent = text;
-      chat.appendChild(li);
-      chat.scrollTop = chat.scrollHeight;
-      return li;
-    }
-
-    async function askBot(message) {
-      const res = await fetch(`${API_BASE}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, customerId }),
-        // mode: "cors" // default, men lämnat här för tydlighet
-      });
-
-      let data = {};
-      try { data = await res.json(); } catch { /* tom body → låt falla ned */ }
-
-      if (!res.ok || data.error) {
-        throw new Error(data?.error || `HTTP ${res.status}`);
-      }
-      return data.reply;
-    }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const msg = input.value.trim();
-      if (!msg) return;
-
-      appendBubble(msg, "user");
-      input.value = "";
-      sendBtn.disabled = true;
-
-      const typing = appendBubble("…", "bot");
-
-      try {
-        const reply = await askBot(msg);
-        typing.textContent = reply || "(tomt svar)";
-      } catch (err) {
-        typing.textContent = `Kunde inte hämta svar: ${err.message}`;
-        console.error(err);
-      } finally {
-        sendBtn.disabled = false;
-      }
-    });
+  <script
+    src="./app.js"
+    defer
+    data-api="https://chatbot-api-jahl-bdeqfbb5amfjfabe.westeurope-01.azurewebsites.net">
   </script>
 </body>
 </html>
