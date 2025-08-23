@@ -8,7 +8,8 @@
 })();
 
 // 2) Grunder och DOM
-const qs = new URLSearchParams(window.location.search);
+const qs = new URLSearchParams(location.search);
+const DEBUG = qs.get("debug") === "1"; // ?debug=1 för att visa status
 const customerId = qs.get("customerId") || "1234";
 
 const form = document.querySelector("#bot-form");
@@ -20,6 +21,15 @@ const statusEl = document.querySelector("#bot-status");
 // 3) Hitta API_BASE (prioritet: query -> data-attr -> window -> config.json -> default)
 const DEFAULT_API = "https://chatbot-api-jahl-bdeqfbb5amfjfabe.westeurope-01.azurewebsites.net"; // byt vid behov
 let API_BASE = undefined;
+
+// Stabilt, klient-side sessionId (sparas i localStorage)
+function sid() {
+  const k = "bj_sid";
+  let v = localStorage.getItem(k);
+  if (!v) { v = (crypto.randomUUID?.() || Math.random().toString(36).slice(2)); localStorage.setItem(k, v); }
+  return v;
+}
+const sessionId = sid();
 
 function trimSlash(u) { return (u || "").replace(/\/+$/, ""); }
 
@@ -50,8 +60,8 @@ async function resolveApiBase() {
 
   // Visa statusrad (bra vid felsökning). Sätt hidden=true om du vill dölja.
   if (statusEl) {
-    statusEl.hidden = false;
-    statusEl.textContent = `Använder API: ${API_BASE}`;
+   statusEl.hidden = !DEBUG;
+  if (DEBUG) statusEl.textContent = `Använder API: ${API_BASE}`;
   }
 }
 
