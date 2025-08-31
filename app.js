@@ -122,7 +122,7 @@ async function init() {
       // Vanliga fel: CORS (ingen Access-Control-Allow-Origin), fel host, timeout
       let friendly = String(err.message || err);
       if (/Failed to fetch|TypeError/i.test(friendly)) {
-        friendly = "Kunde inte kontakta API:t. Kontrollera att API-URL är korrekt och att CORS tillåter https://filipwestjahl.github.io.";
+        friendly = "Kunde inte kontakta API:t. Kontrollera att API-URL är korrekt och att CORS tillåter https://westjahlconsulting.github.io.";
       }
       if (/AbortError/i.test(friendly)) {
         friendly = "Tidsgräns mot API:t. Försök igen eller kontrollera servern.";
