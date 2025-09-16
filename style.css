@@ -1,69 +1,70 @@
-/* BotJahl widget theme – vit bakgrund + brandfärger */
 :root{
-  --bg: #ffffff;
-  --fg: #0a0f1f;
-  --muted: #6b7280;
-  --card: #ffffff;
+  --bg:#ffffff;                /* vit bakgrund */
+  --fg:#0b1220;                /* mörk text */
+  --muted:#64748b;
 
-  --primary: #60a5fa;    /* blå */
-  --primary-2: #22d3ee;  /* cyan */
-  --accent: #a78bfa;     /* lila */
+  /* BotJahl-accenter (matchar din sajt) */
+  --accent:#22d3ee;            /* cyan */
+  --accent-2:#60a5fa;          /* blå */
 
-  --bubble-user: #eef6ff;
-  --bubble-bot:  #f0f9ff;
+  /* Bubblor */
+  --bot-bg:#ecfdf5;            /* mint/grön ton för AI */
+  --bot-border:#bbf7d0;
 
-  --border: rgba(2,6,23,.08);
-  --shadow: 0 10px 30px rgba(2,6,23,.08);
+  --user-bg:#dbeafe;           /* ljusblå för användaren */
+  --user-border:#bfdbfe;
+
+  --card:#ffffff;
+  --ring:#e5e7eb;
 }
 
 *{box-sizing:border-box}
+html,body{height:100%}
 body{
-  margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial; background:var(--bg); color:var(--fg);
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:var(--bg);
+  color:var(--fg);
 }
 
-.wrap{max-width:900px;margin:24px auto;padding:0 16px}
-h1,h2,h3{margin:0 0 10px}
-h2{font-size:1.25rem}
-p{margin:0 0 8px;color:var(--fg)}
+.container{max-width:880px;margin:36px auto;padding:0 16px}
+h1{font-size:28px;margin:0 0 16px;text-align:center}
 
-/* Chat container */
-.card{
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  padding: 14px;
+.chatcard{
+  background:var(--card);
+  border:1px solid var(--ring);
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(2,6,23,.06);
+  padding:16px;
 }
 
-/* Messages */
-#chat{ list-style:none; margin:0; padding:0; max-height: 520px; overflow:auto }
-.msg{ display:flex; margin:10px 0 }
-.msg .bubble{
-  padding:12px 14px; border-radius:14px; line-height:1.45; max-width:78%;
-  border:1px solid var(--border); word-wrap:break-word; white-space:normal;
+.chatlog{
+  list-style:none;margin:0 0 12px;padding:0;
+  max-height:64vh;overflow:auto;scroll-behavior:smooth;
 }
-.msg.user{ justify-content:flex-end }
-.msg.user .bubble{ background: var(--bubble-user); }
-.msg.bot  .bubble{ background: var(--bubble-bot); }
-
-/* Markdown basics inside bot bubble */
-.msg.bot .bubble h2,.msg.bot .bubble h3,.msg.bot .bubble h4{ margin:6px 0 4px; font-size:1rem }
-.msg.bot .bubble p{ margin:6px 0 }
-.msg.bot .bubble ul,.msg.bot .bubble ol{ margin:6px 0 6px 18px }
-.msg.bot .bubble code{ padding:2px 4px; border-radius:6px; background:#f3f4f6; }
-.msg.bot .bubble pre{ background:#0b1220; color:#e5e7eb; padding:10px; border-radius:10px; overflow:auto }
-
-/* Form */
-.form-row{ display:flex; gap:10px; margin-top:12px }
-#bot-input{
-  flex:1; padding:12px 14px; border-radius:12px; border:1px solid var(--border); outline:none;
+.chatlog li{
+  padding:12px 14px;border-radius:12px;margin:10px 0;max-width:86%;
+  line-height:1.45;word-break:break-word;border:1px solid transparent;
 }
-#send-btn{
-  appearance:none; border:0; padding:12px 16px; border-radius:12px; color:white;
-  background: linear-gradient(135deg, var(--primary), var(--primary-2), var(--accent));
-  cursor:pointer; box-shadow: var(--shadow);
-}
-#send-btn:disabled{ opacity:.6; cursor:not-allowed }
+.chatlog li.bot  {margin-right:auto;background:var(--bot-bg);  border-color:var(--bot-border)}
+.chatlog li.user {margin-left:auto; background:var(--user-bg); border-color:var(--user-border)}
 
-/* Tiny debug / typing area */
-#typing{ font-size:12px; color:var(--muted); margin-top:6px }
+.chatlog li p{margin:.35rem 0}
+.chatlog li h1,.chatlog li h2,.chatlog li h3{margin:.3rem 0 .2rem}
+.chatlog li ul, .chatlog li ol{margin:.2rem 0 .2rem 1.25rem}
+.chatlog li code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f3f4f6;padding:.15rem .35rem;border-radius:6px}
+
+/* Inmatning */
+.chatbar{display:flex;gap:10px}
+.chatbar input{
+  flex:1;padding:12px 14px;border:1px solid var(--ring);border-radius:12px;font-size:16px
+}
+.chatbar input:focus{outline:0;border-color:var(--accent)}
+.chatbar button{
+  padding:12px 16px;border:0;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;font-weight:700;cursor:pointer
+}
+.chatbar button:disabled{opacity:.6;cursor:default}
+
+.status{text-align:center;font-size:14px;color:var(--muted);margin-top:8px}
