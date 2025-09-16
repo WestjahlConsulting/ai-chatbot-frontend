@@ -1,51 +1,31 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BotJahl Demo-widget</title>
-  <!-- Om du har en separat styles.css, behåll länken nedan -->
-  <link rel="stylesheet" href="./styles.css"/>
-  <style>
-    /* Minimal fallback-stil om styles.css saknas – kan tas bort */
-    :root { --bg:#f5f7fb; --fg:#0f172a; --card:#ffffff; --blue:#2563eb; --u:#eef2ff; --b:#dcfce7; }
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;background:var(--bg);color:var(--fg)}
-    .container{max-width:860px;margin:40px auto;padding:0 16px}
-    h1{text-align:center;font-size:28px;margin:0 0 18px}
-    .chatcard{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 8px 30px rgba(2,6,23,.08)}
-    .chatlog{list-style:none;padding:0;margin:0 0 12px;max-height:60vh;overflow:auto}
-    .chatlog li{padding:12px 14px;border-radius:10px;margin:10px 0;max-width:85%;line-height:1.35;word-break:break-word}
-    .chatlog li.user{margin-left:auto;background:var(--u)}
-    .chatlog li.bot{margin-right:auto;background:var(--b)}
-    .chatbar{display:flex;gap:10px}
-    .chatbar input{flex:1;padding:12px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:16px}
-    .chatbar button{padding:12px 16px;border:0;border-radius:10px;background:var(--blue);color:white;font-weight:600;cursor:pointer}
-    .chatbar button:disabled{opacity:.6;cursor:default}
-    .status{text-align:center;font-size:14px;color:#64748b;margin-top:8px}
-  </style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>BotJahl – Chat Widget</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <main class="container">
-    <h1>Testa vår AI-chattbot</h1>
+  <div class="wrap">
+    <h1 style="text-align:center;margin:6px 0 14px">Testa vår AI-chattbot</h1>
+    <div class="card" role="region" aria-label="Chat">
+      <ul id="chat" aria-live="polite" aria-busy="false"></ul>
+      <div id="typing"></div>
 
-    <div class="chatcard">
-      <ul id="bot-chat" class="chatlog">
-        <li class="bot">Hej! Hur kan jag hjälpa dig idag?</li>
-      </ul>
-
-      <form id="bot-form" class="chatbar" autocomplete="off">
-        <input id="bot-input" type="text" placeholder="Skriv din fråga..." autocomplete="off"/>
-        <button id="bot-send" type="submit">Skicka</button>
+      <form id="bot-form" class="form-row" autocomplete="off">
+        <input id="bot-input" placeholder="Skriv din fråga…" autocomplete="off" />
+        <button id="send-btn" type="submit">Skicka</button>
       </form>
-
-      <p id="bot-status" class="status" hidden>Initierar…</p>
-      <noscript><p class="status">Den här widgeten kräver JavaScript.</p></noscript>
     </div>
-  </main>
-  <script
-    src="./app.js"
-    defer
-    data-api="https://chatbot-api-jahl-bdeqfbb5amfjfabe.westeurope-01.azurewebsites.net">
+  </div>
+
+  <!-- Du kan ange API-bas via ?api=... i iframe-URL:en.
+       Alternativt: sätt data-api på scriptet (eller config.json med {"apiBase":"..."}). -->
+  <script src="./app.js"
+          defer
+          data-api="">
   </script>
 </body>
 </html>
