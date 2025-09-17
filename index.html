@@ -5,27 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>BotJahl – Chat Widget</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css">
+  <!-- Viktigt: filnamnet ska matcha din repo-fil-ny (style.css) -->
+  <link rel="stylesheet" href="./style.css?v=2">
 </head>
 <body>
-  <div class="wrap">
-    <h1 style="text-align:center;margin:6px 0 14px">Testa vår AI-chattbot</h1>
-    <div class="card" role="region" aria-label="Chat">
-      <ul id="chat" aria-live="polite" aria-busy="false"></ul>
-      <div id="typing"></div>
+  <main class="container">
+    <h1>Testa vår AI-chattbot</h1>
 
-      <form id="bot-form" class="form-row" autocomplete="off">
-        <input id="bot-input" placeholder="Skriv din fråga…" autocomplete="off" />
+    <div class="chatcard" role="region" aria-label="Chat">
+      <ul id="chat" class="chatlog" aria-live="polite" aria-busy="false"></ul>
+
+      <form id="bot-form" class="chatbar" autocomplete="off">
+        <input id="bot-input" type="text" placeholder="Skriv din fråga…" autocomplete="off" />
         <button id="send-btn" type="submit">Skicka</button>
       </form>
-    </div>
-  </div>
 
-  <!-- Du kan ange API-bas via ?api=... i iframe-URL:en.
-       Alternativt: sätt data-api på scriptet (eller config.json med {"apiBase":"..."}). -->
-  <script src="./app.js"
-          defer
-          data-api="">
-  </script>
+      <p id="bot-status" class="status" hidden>Initierar…</p>
+      <noscript><p class="status">Den här widgeten kräver JavaScript.</p></noscript>
+    </div>
+  </main>
+
+  <!-- Ange API-bas via ?api=... i iframe-URL:en, eller data-api på scriptet,
+       eller config.json {"apiBase":"..."} -->
+  <script src="./app.js" defer data-api=""></script>
 </body>
 </html>
