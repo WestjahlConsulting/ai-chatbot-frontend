@@ -25,12 +25,22 @@ body{
   font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
   background:var(--bg);
   color:var(--fg);
-}
-.wrap{max-width:880px;margin:36px auto;padding:0 16px}
-h1{font-size:28px;margin:0 0 16px;text-align:center}
 
-/* Kortet */
+  /* Nytt: luft mot iframe-kanter */
+  padding:14px;
+}
+@media (min-width:768px){
+  body{ padding:28px; }
+}
+
+/* Wrapen får gärna vara lite bredare än kortet så rubriken kan centreras snyggt */
+.wrap{max-width:980px;margin:0 auto;padding:0 12px}
+h1{font-size:28px;margin:6px 0 16px;text-align:center}
+
+/* Själva chattkortet centreras och görs lite smalare */
 .card{
+  max-width:780px;     /* nytt: kortet är smalare än wrapen */
+  margin:0 auto;       /* nytt: centrera */
   background:var(--card);
   border:1px solid var(--ring);
   border-radius:16px;
@@ -42,8 +52,14 @@ h1{font-size:28px;margin:0 0 16px;text-align:center}
 #chat{list-style:none;margin:0 0 12px;padding:0;max-height:64vh;overflow:auto;scroll-behavior:smooth}
 .msg{display:flex;margin:10px 0}
 .msg .bubble{
-  padding:12px 14px;border-radius:12px;max-width:86%;
+  /* nytt: lite snävare maxbredd på desktop så bubblor inte slår i kanterna */
+  max-width:78%;
+  padding:12px 14px;border-radius:12px;
   line-height:1.48;word-break:break-word;border:1px solid transparent;
+}
+@media (max-width:640px){
+  /* på mobil får bubblor ta mer plats */
+  .msg .bubble{ max-width:90%; }
 }
 
 /* AI / user-bubblor */
@@ -86,7 +102,6 @@ h1{font-size:28px;margin:0 0 16px;text-align:center}
   background:linear-gradient(135deg,var(--accent),var(--accent-2));
   color:#fff;font-weight:700;cursor:pointer
 }
-
 #send-btn:disabled{opacity:.6;cursor:default}
 
 .status{text-align:center;font-size:14px;color:var(--muted);margin-top:8px}
