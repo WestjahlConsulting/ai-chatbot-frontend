@@ -8,11 +8,11 @@
 const qs = new URLSearchParams(location.search);
 const DEBUG = qs.get("debug") === "1";
 const customerId = qs.get("customerId") || "";
-const form     = document.querySelector("#bot-form");
-const input    = document.querySelector("#bot-input");
-const sendBtn  = document.querySelector("#send-btn");
-const chat     = document.querySelector("#chat");
-const typing   = document.querySelector("#typing");
+
+const form    = document.querySelector("#bot-form");
+const input   = document.querySelector("#bot-input");
+const sendBtn = document.querySelector("#send-btn");
+const chat    = document.querySelector("#chat");
 
 function sid(){
   const k = "bj_sid";
@@ -34,7 +34,7 @@ async function resolveApiBase(){
   try{
     const r = await fetch("./config.json",{cache:"no-store"});
     if (r.ok){ const j = await r.json(); if (j?.apiBase) return trimSlash(j.apiBase); }
-  }catch{}
+  }catch{/* ignore */}
   throw new Error("API-bas kunde inte bestämmas. Skicka ?api=… eller config.json med apiBase.");
 }
 
@@ -124,7 +124,6 @@ function addMsg(role, content){
   li.className = role === "user" ? "msg user" : "msg bot";
   const bubble = document.createElement("div");
   bubble.className = "bubble";
-  // user-text => plain, bot-text => markdown
   if (role === "user") {
     bubble.textContent = content;
   } else {
@@ -145,7 +144,10 @@ function fetchWithTimeout(url, options={}, ms=20000){
 async function askBot(message){
   const res = await fetchWithTimeout(`${API_BASE}/api/chat`, {
     method: "POST",
-    headers: {"Content-Type":"application/json"},
+    headers: {
+      "Content-Type":"application/json",
+      "Accept":"application/json"
+    },
     body: JSON.stringify({ message, customerId, sessionId })
   });
   let data={};
@@ -159,7 +161,7 @@ async function askBot(message){
 let API_BASE = "";
 async function init(){
   API_BASE = await resolveApiBase();
-  if (DEBUG) console.log("API_BASE", API_BASE, "customerId", customerId);
+  if (DEBUG) console.log("API_BASE", API_BASE, "customerId", customerId, "sessionId", sessionId);
 
   addMsg("bot", "Hej! Hur kan jag hjälpa dig idag?");
   form.addEventListener("submit", async (e)=>{
@@ -188,5 +190,5 @@ async function init(){
     }
   });
 }
-
+//ny
 init();
