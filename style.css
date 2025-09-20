@@ -109,3 +109,10 @@ h1{font-size:28px;margin:6px 0 16px;text-align:center}
 @media (prefers-reduced-motion: reduce){
   .chatcard,#send-btn,.msg{transition:none;animation:none}
 }
+
+/* Hindra att iframens scroll "läcker" till föräldrasidan och vice versa */
+html, body { min-height: 100%; height: auto; }
+body { overscroll-behavior: none; }
+
+/* Valfritt: säkra att chatloggens höjd inte driver på förälderscroll i onödan */
+#chat { max-height: 64vh; } /* du har redan ~64vh – behåll den eller sänk lite om det behövs */
