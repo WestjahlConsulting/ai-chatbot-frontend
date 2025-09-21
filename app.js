@@ -181,12 +181,12 @@ form.addEventListener("submit", async (e)=>{
   addMsg("user", message);
   input.value=""; input.focus();
 
-  const stopTyping = showTyping();   // <-- starta prickarna
+  const stopTyping = showTyping();   // <-- starta prickar
   sendBtn.disabled = true;
 
   try{
     const reply = await askBot(message);
-    stopTyping();                    // <-- ta bort prickarna
+    stopTyping();                    // <-- ta bort prickar
     addMsg("bot", reply);
   }catch(err){
     stopTyping();                    // <-- ta bort även vid fel
