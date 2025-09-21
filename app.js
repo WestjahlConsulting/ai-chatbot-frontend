@@ -130,7 +130,6 @@ function addMsg(role, content){
   return li;
 }
 
-/* Visa tre punkter medan API:t svarar – returnerar stop()-funktion */
 function showTyping(){
   const li = document.createElement("li");
   li.className = "msg bot typing";
@@ -140,6 +139,7 @@ function showTyping(){
   li.appendChild(bubble);
   chat.appendChild(li);
   chat.scrollTop = chat.scrollHeight;
+  // returnera en "stop"-funktion som tar bort indikatorn
   return () => li.remove();
 }
 
@@ -173,32 +173,32 @@ async function init(){
 
   addMsg("bot", "Hej! Hur kan jag hjälpa dig?");
 
-  form.addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    const message = (input.value || "").trim();
-    if (!message) return;
+form.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const message = (input.value || "").trim();
+  if (!message) return;
 
-    addMsg("user", message);
-    input.value=""; input.focus();
+  addMsg("user", message);
+  input.value=""; input.focus();
 
-    const stopTyping = showTyping();
-    sendBtn.disabled = true;
+  const stopTyping = showTyping();   // <-- starta prickarna
+  sendBtn.disabled = true;
 
-    try{
-      const reply = await askBot(message);
-      stopTyping();
-      addMsg("bot", reply);
-    }catch(err){
-      stopTyping();
-      let friendly = (err && err.message) ? String(err.message) : "okänt fel";
-      if (/^http/i.test(friendly) || /Failed to fetch/.test(friendly)) friendly = "Nätverksfel mot API:t.";
-      if (/AbortError/i.test(friendly)) friendly = "Tidsgräns mot API:t. Försök igen.";
-      addMsg("bot", `Kunde inte hämta svar: ${friendly}`);
-      console.error(err);
-    }finally{
-      sendBtn.disabled = false;
-    }
-  });
+  try{
+    const reply = await askBot(message);
+    stopTyping();                    // <-- ta bort prickarna
+    addMsg("bot", reply);
+  }catch(err){
+    stopTyping();                    // <-- ta bort även vid fel
+    let friendly = (err && err.message) ? String(err.message) : "okänt fel";
+    if (/^http/i.test(friendly) || /Failed to fetch/.test(friendly)) friendly = "Nätverksfel mot API:t.";
+    if (/AbortError/i.test(friendly)) friendly = "Tidsgräns mot API:t. Försök igen.";
+    addMsg("bot", `Kunde inte hämta svar: ${friendly}`);
+    console.error(err);
+  }finally{
+    sendBtn.disabled = false;
+  }
+});
 }
 //ny
 init();
