@@ -41,13 +41,13 @@
   };
 
   // ---- read attributes ----
-  const isPreview  = (s?.dataset?.preview === "1"); // NYTT
-  const s = document.currentScript;
+  const s = document.currentScript;            // <-- FLYTTAD HIT
+  const isPreview  = (s?.dataset?.preview === "1"); // <-- funkar nu
   const API_BASE   = (s?.dataset?.api || "").replace(/\/+$/,"");
   const customerId = s?.dataset?.customer || "";
-  const mountId    = s?.dataset?.mount || "botjahl-chat"; // valfritt: <div id="botjahl-chat"></div>
-  const theme      = (s?.dataset?.theme || "light").toLowerCase(); // light|dark
-  const maxHeight  = s?.dataset?.height || "520"; // px (string tillåts)
+  const mountId    = s?.dataset?.mount || "botjahl-chat";
+  const theme      = (s?.dataset?.theme || "light").toLowerCase();
+  const maxHeight  = s?.dataset?.height || "520";
   const placeholder= s?.dataset?.placeholder || "Skriv din fråga…";
 
   if (!API_BASE || !customerId){
