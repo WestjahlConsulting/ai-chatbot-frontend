@@ -8,6 +8,7 @@
 const qs = new URLSearchParams(location.search);
 const DEBUG = qs.get("debug") === "1";
 const customerId = qs.get("customerId") || "";
+const IS_PREVIEW = qs.get("preview") === "1";
 
 const form    = document.querySelector("#bot-form");
 const input   = document.querySelector("#bot-input");
@@ -149,6 +150,19 @@ function fetchWithTimeout(url, options={}, ms=20000){
   return fetch(url, { ...options, signal: ctl.signal }).finally(()=>clearTimeout(id));
 }
 
+// --- NYTT: visa vänlig spärr och lås input när preview-kvoten är nådd ---
+let PREVIEW_LOCK = false;
+function lockPreviewLimit(msg){
+  PREVIEW_LOCK = true;
+  if (input)  input.disabled = true;
+  if (sendBtn) sendBtn.disabled = true;
+  // visa statusrad om den finns
+  const s = document.getElementById("bot-status");
+  if (s){ s.hidden = false; s.textContent = msg || "Förhandsgränsen är nådd."; }
+  // och lägg ett bot-meddelande i chatten för tydlighet
+  addMsg("bot", msg || "Förhandsgränsen är nådd. För att fortsätta – bädda in på din webbplats.");
+}
+
 async function askBot(message){
   const res = await fetchWithTimeout(`${API_BASE}/api/chat`, {
     method: "POST",
@@ -156,13 +170,28 @@ async function askBot(message){
       "Content-Type":"application/json",
       "Accept":"application/json"
     },
-    body: JSON.stringify({ message, customerId, sessionId })
+    body: JSON.stringify({ message, customerId, sessionId, preview: IS_PREVIEW })
   });
+
   let data={};
   try{ data = await res.json(); }catch{}
-  if (!res.ok || data.error){
+
+  // Hantera felkoder först (utan att kasta bort data/error från servern)
+  if (!res.ok || data?.error){
+    // 429 = preview-kvoten nådd
+    if (res.status === 429) {
+      lockPreviewLimit(data?.error || "Gränsen för förhandsvisningen är nådd (max frågor uppnådda).");
+      // kasta ett "snällt" fel så submit-handlern kan visa samma text
+      throw new Error(data?.error || "Gränsen för förhandsvisningen är nådd.");
+    }
+    // 402 = betalning saknas (utanför preview-läge)
+    if (res.status === 402) {
+      throw new Error(data?.error || "Betalning saknas. Slutför checkout eller lägg in kort i portalen.");
+    }
+    // default
     throw new Error(data?.error || `HTTP ${res.status}`);
   }
+
   return data.reply;
 }
 
@@ -175,28 +204,34 @@ async function init(){
 
 form.addEventListener("submit", async (e)=>{
   e.preventDefault();
+  if (PREVIEW_LOCK) return; // NYTT: spärr när kvoten är nådd
+
   const message = (input.value || "").trim();
   if (!message) return;
 
   addMsg("user", message);
   input.value=""; input.focus();
 
-  const stopTyping = showTyping();   // <-- starta prickar
+  const stopTyping = showTyping();
   sendBtn.disabled = true;
 
   try{
     const reply = await askBot(message);
-    stopTyping();                    // <-- ta bort prickar
+    stopTyping();
     addMsg("bot", reply);
   }catch(err){
-    stopTyping();                    // <-- ta bort även vid fel
+    stopTyping();
     let friendly = (err && err.message) ? String(err.message) : "okänt fel";
+    // nätverksfel
     if (/^http/i.test(friendly) || /Failed to fetch/.test(friendly)) friendly = "Nätverksfel mot API:t.";
     if (/AbortError/i.test(friendly)) friendly = "Tidsgräns mot API:t. Försök igen.";
-    addMsg("bot", `Kunde inte hämta svar: ${friendly}`);
+    // Om vi fick 429 tidigare har lockPreviewLimit redan låst och lagt ett bot-meddelande,
+    // men visa ändå ett kort fel i chatten om det inte var just 429-meddelandet.
+    if (!PREVIEW_LOCK) addMsg("bot", `Kunde inte hämta svar: ${friendly}`);
     console.error(err);
   }finally{
-    sendBtn.disabled = false;
+    // Om kvoten inte är låst, återaktivera knappen
+    if (!PREVIEW_LOCK) sendBtn.disabled = false;
   }
 });
 }
