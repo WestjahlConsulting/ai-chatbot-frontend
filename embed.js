@@ -41,6 +41,7 @@
   };
 
   // ---- read attributes ----
+  const isPreview  = (s?.dataset?.preview === "1"); // NYTT
   const s = document.currentScript;
   const API_BASE   = (s?.dataset?.api || "").replace(/\/+$/,"");
   const customerId = s?.dataset?.customer || "";
@@ -146,7 +147,7 @@
     const r = await fetch(`${API_BASE}/api/chat`, {
       method: "POST",
       headers: { "Content-Type":"application/json", "Accept":"application/json" },
-      body: JSON.stringify({ message: msg, customerId, sessionId, preview: false })
+      body: JSON.stringify({ message: msg, customerId, sessionId, preview: isPreview })
     });
     const t = await r.text(); let j={}; try{ j = JSON.parse(t); }catch{}
     if (!r.ok || j?.error){
