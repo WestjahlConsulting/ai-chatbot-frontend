@@ -1,0 +1,35 @@
+name: stage-swa
+on:
+  push:
+    branches: [ 'release/**' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OUTPUT_LOCATION: 'dist'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: stage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.SWA_STAGE_FRONTEND_TOKEN }}
+          action: "upload"               # 👈 Lägg till denna rad
+          app_location: .
+          output_location: ${{ env.OUTPUT_LOCATION }}
