@@ -248,18 +248,12 @@ async function init() {
   initLauncher();
 
   if (chat) {
-    if (IS_DEMO_PAGE) {
-      addMsg(
-        "bot",
-        "### Testa BotJahl – demobott\n" +
-        "Detta är vår **demo-kund**. Här kan du ställa frågor om produkten och hur den fungerar.\n\n" +
-        "- Fråga om funktioner, pris eller hur du kan använda BotJahl på din webbplats.\n" +
-        "- Demot är begränsat till **6 frågor per besökare**.\n\n" +
-        "Vad vill du veta om BotJahl?"
-      );
-    } else {
-      addMsg("bot", "Hej! Hur kan jag hjälpa dig?");
-    }
+      if (IS_DEMO_PAGE) {
+    // Kort demo-hälsning – resten står i det blå fältet i marknadssidan
+    addMsg("bot", "Hej, vad vill du veta om BotJahl?");
+  } else {
+    addMsg("bot", "Hej! Hur kan jag hjälpa dig?");
+  }
 
   if (!form) return;
 
