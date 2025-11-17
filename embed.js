@@ -3,7 +3,7 @@
   if (window.__botjahlEmbedLoaded) return;
   window.__botjahlEmbedLoaded = true;
 
-  // ---------- Helpers ----------
+  // ---------- helpers ----------
   const esc = (s) =>
     (s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -124,9 +124,9 @@
     return v;
   }
 
-  // ---------- Läs config ----------
-  const s = document.currentScript;
-  const ds = (s && s.dataset) || {};
+  // ---------- read config / data-* ----------
+  const scriptTag = document.currentScript;
+  const ds = (scriptTag && scriptTag.dataset) || {};
   const globalCfg = window.BotJahlConfig || {};
 
   function trim(u) {
@@ -156,7 +156,7 @@
 
   const sessionId = makeSessionId(customerId);
 
-  // ---------- Inject CSS ----------
+  // ---------- inject CSS ----------
   const style = document.createElement("style");
   style.textContent = `
     .bj-launcher{
@@ -417,7 +417,7 @@
   `;
   document.head.appendChild(style);
 
-  // ---------- Bygg DOM ----------
+  // ---------- build DOM ----------
   const launcher = document.createElement("button");
   launcher.type = "button";
   launcher.className = "bj-launcher " + (theme === "light" ? "light" : "dark");
@@ -565,7 +565,6 @@
     return data.reply;
   }
 
-  // ---------- Öppna/stäng panel ----------
   function openPanel() {
     panel.classList.add("bj-open");
     if (input && !input.disabled) {
@@ -582,7 +581,6 @@
   });
   closeBtn.addEventListener("click", () => closePanel());
 
-  // ---------- Formhändelse ----------
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
