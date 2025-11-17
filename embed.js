@@ -223,7 +223,7 @@
       right:1.5rem;
       bottom:5.4rem;
       width:min(400px,92vw);
-      max-height:min(520px,80vh);
+      height:min(520px,80vh);
       border-radius:1.3rem;
       overflow:hidden;
       box-shadow:0 20px 50px rgba(15,23,42,.8);
@@ -288,13 +288,14 @@
       display:flex;
       flex-direction:column;
       overflow:hidden;
+      height:100%;
     }
     .bj-log{
       list-style:none;
-      padding:.6rem .7rem .7rem;
+      padding: 12px;
       margin:0;
       flex:1 1 auto;
-      overflow:auto;
+      overflow-y:auto;
       background:#f9fafb;
     }
     .bj-msg{ margin:.35rem 0; display:flex; }
