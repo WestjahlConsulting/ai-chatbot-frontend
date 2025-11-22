@@ -133,32 +133,67 @@ function mdToHtml(src) {
   return html;
 }
 
+function scrollChatToBottom(smooth = true) {
+  if (!chat) return;
+
+  // Vänta ett varv så layouten hinner uppdateras
+  requestAnimationFrame(() => {
+    try {
+      chat.scrollTo({
+        top: chat.scrollHeight,
+        behavior: smooth ? "smooth" : "auto"
+      });
+    } catch {
+      // fallback för äldre browsers
+      chat.scrollTop = chat.scrollHeight;
+    }
+  });
+}
+
+
 /* Helpers för att lägga till meddelanden + typing */
 function addMsg(role, content) {
   const li = document.createElement("li");
   li.className = role === "user" ? "msg user" : "msg bot";
+
   const bubble = document.createElement("div");
   bubble.className = "bubble";
-  if (role === "user") bubble.textContent = content;
-  else bubble.innerHTML = mdToHtml(content);
+
+  if (role === "user") {
+    bubble.textContent = content;
+  } else {
+    bubble.innerHTML = mdToHtml(content);
+  }
+
   li.appendChild(bubble);
   chat.appendChild(li);
-  chat.scrollTop = chat.scrollHeight;
+
+  // Smidig auto-scroll till senaste meddelandet
+  scrollChatToBottom(true);
+
   return li;
 }
+
+
 
 function showTyping() {
   const li = document.createElement("li");
   li.className = "msg bot typing";
+
   const bubble = document.createElement("div");
   bubble.className = "bubble";
   bubble.innerHTML = `<span class="dots"><i></i><i></i><i></i></span>`;
+
   li.appendChild(bubble);
   chat.appendChild(li);
-  chat.scrollTop = chat.scrollHeight;
+
+  // Se till att "bot skriver..." alltid syns
+  scrollChatToBottom(true);
+
   // returnera en "stop"-funktion som tar bort indikatorn
   return () => li.remove();
 }
+
 
 function fetchWithTimeout(url, options = {}, ms = 20000) {
   const ctl = new AbortController();

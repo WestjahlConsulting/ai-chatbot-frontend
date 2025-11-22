@@ -425,7 +425,7 @@
   launcher.setAttribute("id", "bj-launcher");
   launcher.setAttribute("aria-label", "Öppna chatten");
   launcher.innerHTML =
-    '<span class="bj-launcher-icon">💬</span><span class="bj-launcher-label">Chatta med oss</span>';
+    '<span class="bj-launcher-icon">💬</span><span class="bj-launcher-label">Chatt</span>';
 
   const panel = document.createElement("div");
   panel.className = "bj-panel";
