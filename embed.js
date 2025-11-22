@@ -156,14 +156,15 @@
 
   const sessionId = makeSessionId(customerId);
 
-  // ---------- inject CSS ----------
-  const style = document.createElement("style");
-  style.textContent = `
+ // ---------- inject CSS ----------
+const style = document.createElement("style");
+style.textContent = `
+    /* ===== LAUNCHER (floating chattbubbla) ===== */
     .bj-launcher{
       position:fixed;
       right:1.5rem;
       bottom:1.5rem;
-      width:56px;
+      min-width:56px;                /* ← FIX: ersätter width:56px */
       height:56px;
       border-radius:999px;
       border:none;
@@ -174,7 +175,10 @@
       box-shadow:0 12px 30px rgba(15,23,42,.55);
       z-index:999998;
       transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+      padding:0;                     /* ← FIX: ingen padding på mobil → perfekt rund */
+      overflow:hidden;               /* ← FIX: text kan aldrig sticka utanför */
     }
+
     .bj-launcher-icon{
       width:26px;
       height:26px;
@@ -185,21 +189,27 @@
       background:rgba(15,23,42,.9);
       color:#f9fafb;
       font-size:18px;
+      flex-shrink:0;
     }
+
     .bj-launcher-label{
       display:none;
-      margin-left:.5rem;
-      font-size:.9rem;
+      margin-left:.55rem;
+      font-size:.95rem;
       font-weight:600;
       white-space:nowrap;
     }
+
+    /* Desktop → gör bubblan till “pill button” */
     @media (min-width:768px){
       .bj-launcher{
         padding:0 .9rem 0 .6rem;
+        width:auto;                 /* ← FIX: låt den växa naturligt av texten */
       }
       .bj-launcher-label{ display:inline; }
     }
 
+    /* Colors */
     .bj-launcher.dark{
       background:linear-gradient(135deg,#22c55e,#16a34a);
       color:#f9fafb;
@@ -208,6 +218,7 @@
       background:linear-gradient(135deg,#2563eb,#4f46e5);
       color:#f9fafb;
     }
+
     .bj-launcher:hover{
       transform:translateY(-2px);
       box-shadow:0 18px 40px rgba(15,23,42,.7);
@@ -218,6 +229,7 @@
       box-shadow:0 10px 24px rgba(15,23,42,.7);
     }
 
+    /* ===== PANEL ===== */
     .bj-panel{
       position:fixed;
       right:1.5rem;
@@ -239,6 +251,7 @@
       transform:translateY(0);
       pointer-events:auto;
     }
+
     @media (max-width:640px){
       .bj-panel{
         right:.75rem;
@@ -249,6 +262,7 @@
       }
     }
 
+    /* ===== CLOSE BUTTON ===== */
     .bj-close{
       position:absolute;
       top:.55rem;
@@ -272,6 +286,7 @@
       transform:translateY(-1px);
     }
 
+    /* ===== PANEL CONTENT ===== */
     .bj-wrap{
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
       color:#0f172a;
@@ -280,6 +295,7 @@
       flex-direction:column;
       padding:0.9rem 0.9rem 0.8rem;
     }
+
     .bj-card{
       flex:1 1 auto;
       border-radius:1rem;
@@ -290,14 +306,17 @@
       overflow:hidden;
       height:100%;
     }
+
+    /* ===== LOG ===== */
     .bj-log{
       list-style:none;
-      padding: 12px;
+      padding:12px;
       margin:0;
       flex:1 1 auto;
       overflow-y:auto;
       background:#f9fafb;
     }
+
     .bj-msg{ margin:.35rem 0; display:flex; }
     .bj-bub{
       display:inline-block;
@@ -307,12 +326,14 @@
       line-height:1.35;
       font-size:.92rem;
     }
+
     .bj-user{ justify-content:flex-end; }
     .bj-user .bj-bub{
       background:#eef2ff;
       color:#111827;
       border-radius:1rem 0.8rem 0.8rem 1rem;
     }
+
     .bj-bot{ justify-content:flex-start; }
     .bj-bot .bj-bub{
       background:#dcfce7;
@@ -320,6 +341,7 @@
       border-radius:0.8rem 1rem 1rem 0.8rem;
     }
 
+    /* ===== INPUT BAR ===== */
     .bj-bar{
       display:flex;
       gap:.55rem;
@@ -350,12 +372,14 @@
       cursor:default;
     }
 
+    /* ===== STATUS ===== */
     .bj-status{
       margin:.35rem .15rem 0;
       font-size:.75rem;
       color:#64748b;
     }
 
+    /* ===== TYPING DOTS ===== */
     .bj-dots{
       display:inline-flex;
       gap:5px;
@@ -372,10 +396,11 @@
     .bj-dots i:nth-child(2){ animation-delay:.18s; }
     .bj-dots i:nth-child(3){ animation-delay:.36s; }
     @keyframes bj-blink{
-      0%,80%,100%{ opacity:.25; transform:scale(.85); }
+      0%,80%,100{ opacity:.25; transform:scale(.85); }
       40%{ opacity:1; transform:scale(1); }
     }
 
+    /* ===== CODE BLOCK ===== */
     .bj-code{
       background:#020617;
       color:#e5e7eb;
@@ -387,7 +412,7 @@
       white-space:pre-wrap;
     }
 
-    /* Dark mode */
+    /* ===== DARK MODE OVERRIDES ===== */
     .bj-dark .bj-card{
       border-color:#1f2937;
       background:#020617;
@@ -415,8 +440,9 @@
     .bj-dark .bj-status{
       color:#9ca3af;
     }
-  `;
-  document.head.appendChild(style);
+`;
+document.head.appendChild(style);
+
 
   // ---------- build DOM ----------
   const launcher = document.createElement("button");
