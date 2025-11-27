@@ -128,6 +128,21 @@
   const scriptTag = document.currentScript;
   const ds = (scriptTag && scriptTag.dataset) || {};
   const globalCfg = window.BotJahlConfig || {};
+  const isDemo =
+  globalCfg.demo === true ||
+  ds.demo === "1" ||
+  ds.demo === "true";
+
+const previewFlag =
+  globalCfg.preview === true ||
+  ds.preview === "1" ||
+  ds.preview === "true";
+
+const previewFrame =
+  globalCfg.previewFrame === true ||
+  ds.previewFrame === "1" ||
+  ds.previewFrame === "true";
+
 
   function trim(u) {
     return (u || "").replace(/\/+$/, "");
@@ -138,8 +153,6 @@
   const themeCfg = (globalCfg.theme || ds.theme || "auto").toLowerCase();
   const placeholder =
     globalCfg.placeholder || ds.placeholder || "Skriv din fråga…";
-  const previewFlag =
-    globalCfg.preview === true || ds.preview === "1" || ds.preview === "true";
 
   if (!API_BASE || !customerId) {
     console.error(
@@ -542,55 +555,58 @@ document.head.appendChild(style);
   }
 
   async function askApi(message) {
-    const url = `${API_BASE}/api/chat`;
-    const payload = {
-      message,
-      customerId,
-      sessionId,
-      preview: !!previewFlag
-    };
+  const url = isDemo
+    ? `${API_BASE}/api/public/demo/chat`
+    : `${API_BASE}/api/chat`;
 
-    const res = await fetchWithTimeout(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+  const payload = isDemo
+    ? { message, sessionId }
+    : { message, customerId, sessionId, preview: !!previewFlag };
 
-    let data = {};
-    try {
-      data = await res.json();
-    } catch {
-      data = {};
-    }
+  const res = await fetchWithTimeout(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
 
-    if (!res.ok || data?.error) {
-      if (res.status === 429) {
-        const msg =
-          data?.error ||
-          "Förhandsgränsen är nådd. För att fortsätta, uppgradera din plan eller bädda in på din egen domän.";
-        lock(msg);
-        throw new Error(msg);
-      }
-      if (res.status === 402) {
-        throw new Error(
-          data?.error ||
-            "Betalning saknas. Kontrollera din prenumeration i kundportalen."
-        );
-      }
-      if (res.status === 403) {
-        throw new Error(
-          data?.error ||
-            "Domänen verkar inte vara whitelistrad för den här boten."
-        );
-      }
-      throw new Error(data?.error || `HTTP ${res.status}`);
-    }
-
-    return data.reply;
+  let data = {};
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
   }
+
+  if (!res.ok || data?.error) {
+    if (res.status === 429) {
+      const msg = isDemo
+        ? data?.error ||
+          "Demot är begränsat till 6 frågor per besökare."
+        : data?.error ||
+          "Förhandsgränsen är nådd. För att fortsätta, uppgradera din plan eller bädda in på din egen domän.";
+      lock(msg);
+      throw new Error(msg);
+    }
+    if (res.status === 402) {
+      throw new Error(
+        data?.error ||
+          "Betalning saknas. Kontrollera din prenumeration i kundportalen."
+      );
+    }
+    if (res.status === 403) {
+      throw new Error(
+        data?.error ||
+          "Domänen verkar inte vara whitelistrad för den här boten."
+      );
+    }
+    throw new Error(data?.error || `HTTP ${res.status}`);
+  }
+
+  return data.reply;
+}
+
 
   function openPanel() {
     panel.classList.add("bj-open");
@@ -607,6 +623,10 @@ document.head.appendChild(style);
     else openPanel();
   });
   closeBtn.addEventListener("click", () => closePanel());
+  // Om vi kör inne i en preview-iframe: öppna panelen direkt
+if (previewFrame) {
+  openPanel();
+}
 
   if (form) {
     form.addEventListener("submit", async (e) => {
