@@ -1,14 +1,37 @@
 // BotJahl floating embed widget – körs på kundens sida
+// 🔒 SÄKER VERSION med XSS-skydd
 (() => {
   if (window.__botjahlEmbedLoaded) return;
   window.__botjahlEmbedLoaded = true;
 
   // ---------- helpers ----------
   const esc = (s) =>
-    (s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    (s ?? "").replace(/[&<>"']/g, (c) => ({ 
+      "&": "&amp;", 
+      "<": "&lt;", 
+      ">": "&gt;", 
+      '"': "&quot;",
+      "'": "&#39;"
+    }[c]));
 
+  // 🔒 SÄKERHET: Validera att URL är säker
+  function isSafeUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    
+    try {
+      const parsed = new URL(url);
+      // Tillåt ENDAST http och https
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
+  // 🔒 SÄKERHET: Förbättrad Markdown-rendering med URL-validering
   function mdToHtml(src) {
     if (!src) return "";
+    
+    // 1. Hantera code blocks först (escape dem helt)
     const fence = /```([^\n]*)\n([\s\S]*?)```/g;
     const blocks = [];
     src = src.replace(fence, (_, lang, code) => {
@@ -16,23 +39,41 @@
       return `@@CODE${i}@@`;
     });
 
+    // 2. Escape all HTML
     src = esc(src);
 
+    // 3. 🔒 Säkra länkar - VALIDERA URL:er
+    src = src.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+      const cleanUrl = url.trim();
+      
+      // Validera att URL:en är säker
+      if (!isSafeUrl(cleanUrl)) {
+        // Om URL:en är osäker, returnera bara texten utan länk
+        return linkText;
+      }
+      
+      // Escape både URL och text för extra säkerhet
+      return `<a href="${esc(cleanUrl)}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+    });
+
+    // 4. Formatering
     src = src
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/\[([^\]]+)]\((https?:\/\/[^)]+)\)/g, `<a href="$2" target="_blank" rel="noopener">$1</a>`);
+      .replace(/`([^`]+)`/g, "<code>$1</code>");
 
+    // 5. Process lines för listor och rubriker
     const lines = src.replace(/\r\n/g, "\n").split("\n");
     const out = [];
     let i = 0;
     const buf = [];
+    
     const flush = () => {
       if (!buf.length) return;
       out.push(`<p>${buf.join(" ")}</p>`);
       buf.length = 0;
     };
+    
     const list = (ordered) => {
       const tag = ordered ? "ol" : "ul";
       const items = [];
@@ -95,11 +136,13 @@
     }
     flush();
 
+    // 6. Återinsätt code blocks
     let html = out.join("\n");
     html = html.replace(/@@CODE(\d+)@@/g, (_, n) => {
       const b = blocks[+n];
       return `<pre class="bj-code"><code class="lang-${b.lang}">${b.code}</code></pre>`;
     });
+    
     return html;
   }
 
@@ -177,7 +220,7 @@ style.textContent = `
       position:fixed;
       right:1.5rem;
       bottom:1.5rem;
-      min-width:56px;                /* ← FIX: ersätter width:56px */
+      min-width:56px;
       height:56px;
       border-radius:999px;
       border:none;
@@ -188,8 +231,8 @@ style.textContent = `
       box-shadow:0 12px 30px rgba(15,23,42,.55);
       z-index:999998;
       transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
-      padding:0;                     /* ← FIX: ingen padding på mobil → perfekt rund */
-      overflow:hidden;               /* ← FIX: text kan aldrig sticka utanför */
+      padding:0;
+      overflow:hidden;
     }
 
     .bj-launcher-icon{
@@ -213,11 +256,11 @@ style.textContent = `
       white-space:nowrap;
     }
 
-    /* Desktop → gör bubblan till “pill button” */
+    /* Desktop → gör bubblan till "pill button" */
     @media (min-width:768px){
       .bj-launcher{
         padding:0 .9rem 0 .6rem;
-        width:auto;                 /* ← FIX: låt den växa naturligt av texten */
+        width:auto;
       }
       .bj-launcher-label{ display:inline; }
     }
@@ -623,10 +666,10 @@ document.head.appendChild(style);
     else openPanel();
   });
   closeBtn.addEventListener("click", () => closePanel());
-  // Om vi kör inne i en preview-iframe: öppna panelen direkt
-if (previewFrame) {
-  openPanel();
-}
+  
+  if (previewFrame) {
+    openPanel();
+  }
 
   if (form) {
     form.addEventListener("submit", async (e) => {
