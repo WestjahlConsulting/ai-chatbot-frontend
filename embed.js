@@ -289,14 +289,17 @@ style.textContent = `
     }
 
     /* ===== PANEL ===== */
-    .bj-panel{
+       .bj-panel{
       position:fixed;
       right:1.5rem;
       bottom:5.4rem;
       width:min(400px,92vw);
-      max-height:min(480px,78vh); /* <-- dynamisk höjd istället för fast 520px */
+      /* låt panelen växa fritt upp till en max-höjd */
+      max-height:min(650px,90vh);
       border-radius:1.3rem;
-      overflow:hidden;
+      /* viktig ändring: tillåt vertikal scroll istället för att klippa */
+      overflow-y:auto;
+      overflow-x:hidden;
       box-shadow:0 20px 50px rgba(15,23,42,.8);
       background:#020617;
       z-index:999997;
@@ -317,9 +320,10 @@ style.textContent = `
         left:.75rem;
         bottom:4.8rem;
         width:auto;
-        max-height:min(460px,76vh); /* något lägre på mobil/iframe */
+        max-height:min(600px,90vh);
       }
     }
+
 
 
     /* ===== CLOSE BUTTON ===== */
