@@ -186,6 +186,9 @@ const previewFrame =
   ds.previewFrame === "1" ||
   ds.previewFrame === "true";
 
+const feedbackSource = isDemo ? "demo" : (previewFlag ? "preview" : "prod");
+
+
 
   function trim(u) {
     return (u || "").replace(/\/+$/, "");
@@ -496,6 +499,73 @@ style.textContent = `
     .bj-dark .bj-status{
       color:#9ca3af;
     }
+
+        /* ===== FEEDBACK (betyg + kommentar) ===== */
+    .bj-feedback{
+      margin-top:.55rem;
+      padding:.6rem .7rem;
+      border-radius:.9rem;
+      background:rgba(15,23,42,.95);
+      border:1px solid rgba(148,163,184,.55);
+      color:#e5e7eb;
+      font-size:.8rem;
+    }
+    .bj-feedback-title{
+      margin:0 0 .3rem;
+      font-weight:600;
+      font-size:.82rem;
+    }
+    .bj-stars{
+      display:flex;
+      gap:.15rem;
+      margin-bottom:.35rem;
+    }
+    .bj-stars button{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      font-size:1.1rem;
+      padding:0 .1rem;
+      color:#64748b;
+      transition:transform .08s ease,color .08s ease;
+    }
+    .bj-stars button.active{
+      color:#facc15;
+      transform:translateY(-1px);
+    }
+    #bj-feedback-comment{
+      width:100%;
+      min-height:40px;
+      resize:vertical;
+      border-radius:.6rem;
+      border:1px solid #1f2937;
+      background:#020617;
+      color:#e5e7eb;
+      padding:.4rem .5rem;
+      font-size:.8rem;
+      margin-bottom:.35rem;
+      box-sizing:border-box;
+    }
+    .bj-feedback-send{
+      border-radius:999px;
+      border:0;
+      padding:.4rem .8rem;
+      font-size:.8rem;
+      cursor:pointer;
+      background:linear-gradient(135deg,#22c55e,#16a34a);
+      color:#f9fafb;
+      font-weight:600;
+    }
+    .bj-feedback-send:disabled{
+      opacity:.6;
+      cursor:default;
+    }
+    .bj-feedback-status{
+      margin-top:.25rem;
+      font-size:.75rem;
+      color:#9ca3af;
+    }
+    .bj-hidden{display:none;}
 `;
 document.head.appendChild(style);
 
@@ -522,7 +592,7 @@ document.head.appendChild(style);
   const wrap = document.createElement("div");
   wrap.className = "bj-wrap" + (theme === "dark" ? " bj-dark" : "");
 
-  wrap.innerHTML = `
+    wrap.innerHTML = `
     <div class="bj-card">
       <ul class="bj-log" id="bj-log"></ul>
       <form class="bj-bar" id="bj-form" autocomplete="off">
@@ -532,8 +602,25 @@ document.head.appendChild(style);
         <button class="bj-btn" id="bj-send" type="submit">Skicka</button>
       </form>
     </div>
+
+    <!-- Feedback-panel under chatten -->
+    <div class="bj-feedback bj-hidden" id="bj-feedback">
+      <p class="bj-feedback-title">Hur upplevde du hjälpen?</p>
+      <div class="bj-stars">
+        <button type="button" data-rating="1">★</button>
+        <button type="button" data-rating="2">★</button>
+        <button type="button" data-rating="3">★</button>
+        <button type="button" data-rating="4">★</button>
+        <button type="button" data-rating="5">★</button>
+      </div>
+      <textarea id="bj-feedback-comment" rows="2" placeholder="Vill du skriva något mer? (valfritt)"></textarea>
+      <button type="button" id="bj-feedback-send" class="bj-feedback-send">Skicka feedback</button>
+      <div id="bj-feedback-status" class="bj-feedback-status"></div>
+    </div>
+
     <p class="bj-status" id="bj-status"></p>
   `;
+
 
   panel.appendChild(closeBtn);
   panel.appendChild(wrap);
@@ -545,6 +632,14 @@ document.head.appendChild(style);
   const input = panel.querySelector("#bj-input");
   const send = panel.querySelector("#bj-send");
   const statusEl = panel.querySelector("#bj-status");
+
+    // Feedback-element
+  const fbPanel   = panel.querySelector("#bj-feedback");
+  const fbStars   = fbPanel ? fbPanel.querySelectorAll("[data-rating]") : [];
+  const fbComment = fbPanel ? fbPanel.querySelector("#bj-feedback-comment") : null;
+  const fbSend    = fbPanel ? fbPanel.querySelector("#bj-feedback-send") : null;
+  const fbStatus  = fbPanel ? fbPanel.querySelector("#bj-feedback-status") : null;
+
 
   function addMsg(role, text) {
     const li = document.createElement("li");
@@ -572,6 +667,78 @@ document.head.appendChild(style);
   }
 
   let PREVIEW_LOCK = false;
+
+    // ----- FEEDBACK -----
+  let feedbackRating = 0;
+  let feedbackShown = false;
+
+  function ensureFeedbackVisible() {
+    if (!fbPanel || feedbackShown) return;
+    fbPanel.classList.remove("bj-hidden");
+    feedbackShown = true;
+  }
+
+  if (fbPanel && fbStars && fbStars.length) {
+    fbStars.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const r = parseInt(btn.getAttribute("data-rating") || "0", 10);
+        feedbackRating = r;
+        fbStars.forEach(b => {
+          const br = parseInt(b.getAttribute("data-rating") || "0", 10);
+          b.classList.toggle("active", br <= r);
+        });
+      });
+    });
+  }
+
+  async function sendFeedback() {
+    if (!fbPanel || !fbSend || !fbStatus) return;
+
+    if (!feedbackRating) {
+      fbStatus.textContent = "Välj ett betyg först.";
+      return;
+    }
+
+    fbSend.disabled = true;
+    fbStatus.textContent = "Skickar feedback…";
+
+    const body = {
+      customerId,
+      source: feedbackSource, // demo / preview / prod
+      rating: feedbackRating,
+      comment: fbComment && fbComment.value.trim()
+        ? fbComment.value.trim()
+        : null,
+      sessionId
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/api/public/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        fbStatus.textContent = "Tack för din feedback!";
+      } else {
+        fbStatus.textContent = "Kunde inte spara feedback just nu.";
+        fbSend.disabled = false;
+      }
+    } catch (err) {
+      console.error("[BotJahl] feedback error", err);
+      fbStatus.textContent = "Nätverksfel vid feedback.";
+      fbSend.disabled = false;
+    }
+  }
+
+  if (fbSend) {
+    fbSend.addEventListener("click", (e) => {
+      e.preventDefault();
+      sendFeedback();
+    });
+  }
+
 
   function lock(msg) {
     PREVIEW_LOCK = true;
@@ -691,7 +858,10 @@ document.head.appendChild(style);
         const reply = await askApi(msg);
         stopTyping();
         addMsg("bot", reply);
+        // Visa feedback-panelen efter första riktiga svaret
+        ensureFeedbackVisible();
       } catch (err) {
+
         stopTyping();
         let friendly =
           (err && err.message) || "Tekniskt fel, försök igen lite senare.";
