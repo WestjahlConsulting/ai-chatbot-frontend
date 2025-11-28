@@ -294,7 +294,7 @@ style.textContent = `
       right:1.5rem;
       bottom:5.4rem;
       width:min(400px,92vw);
-      height:min(520px,80vh);
+      max-height:min(480px,78vh); /* <-- dynamisk höjd istället för fast 520px */
       border-radius:1.3rem;
       overflow:hidden;
       box-shadow:0 20px 50px rgba(15,23,42,.8);
@@ -317,9 +317,10 @@ style.textContent = `
         left:.75rem;
         bottom:4.8rem;
         width:auto;
-        max-height:min(500px,78vh);
+        max-height:min(460px,76vh); /* något lägre på mobil/iframe */
       }
     }
+
 
     /* ===== CLOSE BUTTON ===== */
     .bj-close{
@@ -612,8 +613,11 @@ document.head.appendChild(style);
         <button type="button" data-rating="3">★</button>
         <button type="button" data-rating="4">★</button>
         <button type="button" data-rating="5">★</button>
-      </div>
-      <textarea id="bj-feedback-comment" rows="2" placeholder="Vill du skriva något mer? (valfritt)"></textarea>
+      </div><textarea
+        id="bj-feedback-comment"
+        rows="2"
+        maxlength="500"
+        placeholder="Vill du skriva något mer? (valfritt, max 500 tecken)"></textarea><textarea id="bj-feedback-comment" rows="2" placeholder="Vill du skriva något mer? (valfritt)"></textarea>
       <button type="button" id="bj-feedback-send" class="bj-feedback-send">Skicka feedback</button>
       <div id="bj-feedback-status" class="bj-feedback-status"></div>
     </div>
@@ -666,7 +670,9 @@ document.head.appendChild(style);
     return () => li.remove();
   }
 
-  let PREVIEW_LOCK = false;
+    let PREVIEW_LOCK = false;
+    let answeredCount = 0; 
+
 
     // ----- FEEDBACK -----
   let feedbackRating = 0;
@@ -706,9 +712,14 @@ document.head.appendChild(style);
       customerId,
       source: feedbackSource, // demo / preview / prod
       rating: feedbackRating,
-      comment: fbComment && fbComment.value.trim()
-        ? fbComment.value.trim()
-        : null,
+      comment: (() => {
+        if (!fbComment) return null;
+        let txt = (fbComment.value || "").trim();
+        if (!txt) return null;
+        // klipp hårt på klienten också
+        if (txt.length > 500) txt = txt.slice(0, 500);
+        return txt;
+      })(),
       sessionId
     };
 
@@ -858,9 +869,14 @@ document.head.appendChild(style);
         const reply = await askApi(msg);
         stopTyping();
         addMsg("bot", reply);
-        // Visa feedback-panelen efter första riktiga svaret
-        ensureFeedbackVisible();
+
+        // öka antal svar och visa feedback först efter t.ex. 3 svar
+        answeredCount++;
+        if (answeredCount >= 2) {
+          ensureFeedbackVisible();
+        }
       } catch (err) {
+
 
         stopTyping();
         let friendly =
