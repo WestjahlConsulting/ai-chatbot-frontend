@@ -288,18 +288,15 @@ style.textContent = `
       box-shadow:0 10px 24px rgba(15,23,42,.7);
     }
 
-    /* ===== PANEL ===== */
-       .bj-panel{
+        /* ===== PANEL ===== */
+    .bj-panel{
       position:fixed;
       right:1.5rem;
       bottom:5.4rem;
       width:min(400px,92vw);
-      /* låt panelen växa fritt upp till en max-höjd */
-      max-height:min(650px,90vh);
+      height:min(520px,80vh);      /* fast höjd, passar i din iframe */
       border-radius:1.3rem;
-      /* viktig ändring: tillåt vertikal scroll istället för att klippa */
-      overflow-y:auto;
-      overflow-x:hidden;
+      overflow:hidden;             /* bara loggen scrollar */
       box-shadow:0 20px 50px rgba(15,23,42,.8);
       background:#020617;
       z-index:999997;
@@ -320,7 +317,7 @@ style.textContent = `
         left:.75rem;
         bottom:4.8rem;
         width:auto;
-        max-height:min(600px,90vh);
+        height:min(500px,78vh);
       }
     }
 
@@ -617,12 +614,15 @@ document.head.appendChild(style);
         <button type="button" data-rating="3">★</button>
         <button type="button" data-rating="4">★</button>
         <button type="button" data-rating="5">★</button>
-      </div><textarea
+      </div>
+      <textarea
         id="bj-feedback-comment"
         rows="2"
         maxlength="500"
-        placeholder="Vill du skriva något mer? (valfritt, max 500 tecken)"></textarea><textarea id="bj-feedback-comment" rows="2" placeholder="Vill du skriva något mer? (valfritt)"></textarea>
-      <button type="button" id="bj-feedback-send" class="bj-feedback-send">Skicka feedback</button>
+        placeholder="Vill du skriva något mer? (valfritt, max 500 tecken)"></textarea>
+      <button type="button" id="bj-feedback-send" class="bj-feedback-send">
+        Skicka feedback
+      </button>
       <div id="bj-feedback-status" class="bj-feedback-status"></div>
     </div>
 
@@ -676,6 +676,7 @@ document.head.appendChild(style);
 
     let PREVIEW_LOCK = false;
     let answeredCount = 0; 
+    const FEEDBACK_AFTER = 3; // visa feedback efter 3 bot-svar
 
 
     // ----- FEEDBACK -----
@@ -874,9 +875,9 @@ document.head.appendChild(style);
         stopTyping();
         addMsg("bot", reply);
 
-        // öka antal svar och visa feedback först efter t.ex. 3 svar
+        
         answeredCount++;
-        if (answeredCount >= 2) {
+        if (answeredCount >= FEEDBACK_AFTER) {
           ensureFeedbackVisible();
         }
       } catch (err) {
