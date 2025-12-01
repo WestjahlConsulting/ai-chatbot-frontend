@@ -1,5 +1,4 @@
-// BotJahl floating embed widget – körs på kundens sida
-// 🔒 SÄKER VERSION med XSS-skydd
+
 (() => {
   if (window.__botjahlEmbedLoaded) return;
   window.__botjahlEmbedLoaded = true;
@@ -14,24 +13,20 @@
       "'": "&#39;"
     }[c]));
 
-  // 🔒 SÄKERHET: Validera att URL är säker
   function isSafeUrl(url) {
     if (!url || typeof url !== 'string') return false;
     
     try {
       const parsed = new URL(url);
-      // Tillåt ENDAST http och https
       return parsed.protocol === 'http:' || parsed.protocol === 'https:';
     } catch {
       return false;
     }
   }
 
-  // 🔒 SÄKERHET: Förbättrad Markdown-rendering med URL-validering
   function mdToHtml(src) {
     if (!src) return "";
     
-    // 1. Hantera code blocks först (escape dem helt)
     const fence = /```([^\n]*)\n([\s\S]*?)```/g;
     const blocks = [];
     src = src.replace(fence, (_, lang, code) => {
@@ -39,30 +34,23 @@
       return `@@CODE${i}@@`;
     });
 
-    // 2. Escape all HTML
     src = esc(src);
 
-    // 3. 🔒 Säkra länkar - VALIDERA URL:er
     src = src.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
       const cleanUrl = url.trim();
       
-      // Validera att URL:en är säker
       if (!isSafeUrl(cleanUrl)) {
-        // Om URL:en är osäker, returnera bara texten utan länk
         return linkText;
       }
       
-      // Escape både URL och text för extra säkerhet
       return `<a href="${esc(cleanUrl)}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
     });
 
-    // 4. Formatering
     src = src
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       .replace(/\*([^*]+)\*/g, "<em>$1</em>")
       .replace(/`([^`]+)`/g, "<code>$1</code>");
 
-    // 5. Process lines för listor och rubriker
     const lines = src.replace(/\r\n/g, "\n").split("\n");
     const out = [];
     let i = 0;
@@ -136,7 +124,6 @@
     }
     flush();
 
-    // 6. Återinsätt code blocks
     let html = out.join("\n");
     html = html.replace(/@@CODE(\d+)@@/g, (_, n) => {
       const b = blocks[+n];
@@ -517,6 +504,26 @@ style.textContent = `
       font-weight:600;
       font-size:.82rem;
     }
+    .bj-feedback-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.5rem;
+      margin-bottom:.25rem;
+    }
+    .bj-feedback-close{
+      border:none;
+      background:transparent;
+      color:#9ca3af;
+      cursor:pointer;
+      font-size:14px;
+      line-height:1;
+      padding:2px 4px;
+    }
+    .bj-feedback-close:hover{
+      color:#e5e7eb;
+    }
+
     .bj-stars{
       display:flex;
       gap:.15rem;
@@ -605,9 +612,18 @@ document.head.appendChild(style);
       </form>
     </div>
 
-    <!-- Feedback-panel under chatten -->
+        <!-- Feedback-panel under chatten -->
     <div class="bj-feedback bj-hidden" id="bj-feedback">
-      <p class="bj-feedback-title">Hur upplevde du hjälpen?</p>
+      <div class="bj-feedback-header">
+        <p class="bj-feedback-title">Hur upplevde du hjälpen?</p>
+        <button
+          type="button"
+          id="bj-feedback-close"
+          class="bj-feedback-close"
+          aria-label="Stäng feedback">
+          ×
+        </button>
+      </div>
       <div class="bj-stars">
         <button type="button" data-rating="1">★</button>
         <button type="button" data-rating="2">★</button>
@@ -625,6 +641,7 @@ document.head.appendChild(style);
       </button>
       <div id="bj-feedback-status" class="bj-feedback-status"></div>
     </div>
+
 
     <p class="bj-status" id="bj-status"></p>
   `;
@@ -647,6 +664,7 @@ document.head.appendChild(style);
   const fbComment = fbPanel ? fbPanel.querySelector("#bj-feedback-comment") : null;
   const fbSend    = fbPanel ? fbPanel.querySelector("#bj-feedback-send") : null;
   const fbStatus  = fbPanel ? fbPanel.querySelector("#bj-feedback-status") : null;
+  const fbClose   = fbPanel ? fbPanel.querySelector("#bj-feedback-close") : null;
 
 
   function addMsg(role, text) {
@@ -676,18 +694,31 @@ document.head.appendChild(style);
 
     let PREVIEW_LOCK = false;
     let answeredCount = 0; 
-    const FEEDBACK_AFTER = 3; // visa feedback efter 3 bot-svar
+    const FEEDBACK_AFTER = 3; 
 
 
     // ----- FEEDBACK -----
   let feedbackRating = 0;
   let feedbackShown = false;
+  let feedbackDismissed = false;
 
   function ensureFeedbackVisible() {
-    if (!fbPanel || feedbackShown) return;
+    if (!fbPanel) return;
+
+    try {
+      if (sessionStorage.getItem("bj_feedback_hidden") === "1") {
+        feedbackDismissed = true;
+      }
+    } catch {
+      // ignore
+    }
+
+    if (feedbackShown || feedbackDismissed) return;
+
     fbPanel.classList.remove("bj-hidden");
     feedbackShown = true;
   }
+
 
   if (fbPanel && fbStars && fbStars.length) {
     fbStars.forEach(btn => {
@@ -715,13 +746,13 @@ document.head.appendChild(style);
 
     const body = {
       customerId,
-      source: feedbackSource, // demo / preview / prod
+      source: feedbackSource, 
       rating: feedbackRating,
       comment: (() => {
         if (!fbComment) return null;
         let txt = (fbComment.value || "").trim();
         if (!txt) return null;
-        // klipp hårt på klienten också
+ 
         if (txt.length > 500) txt = txt.slice(0, 500);
         return txt;
       })(),
@@ -754,6 +785,21 @@ document.head.appendChild(style);
       sendFeedback();
     });
   }
+
+    if (fbClose) {
+    fbClose.addEventListener("click", (e) => {
+      e.preventDefault();
+      fbPanel.classList.add("bj-hidden");
+      feedbackDismissed = true;
+
+      try {
+        sessionStorage.setItem("bj_feedback_hidden", "1");
+      } catch {
+
+      }
+    });
+  }
+
 
 
   function lock(msg) {
