@@ -1,24 +1,23 @@
-
 (() => {
   if (window.__botjahlEmbedLoaded) return;
   window.__botjahlEmbedLoaded = true;
 
   // ---------- helpers ----------
   const esc = (s) =>
-    (s ?? "").replace(/[&<>"']/g, (c) => ({ 
-      "&": "&amp;", 
-      "<": "&lt;", 
-      ">": "&gt;", 
+    (s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
       '"': "&quot;",
       "'": "&#39;"
     }[c]));
 
   function isSafeUrl(url) {
-    if (!url || typeof url !== 'string') return false;
-    
+    if (!url || typeof url !== "string") return false;
+
     try {
       const parsed = new URL(url);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
     } catch {
       return false;
     }
@@ -26,7 +25,7 @@
 
   function mdToHtml(src) {
     if (!src) return "";
-    
+
     const fence = /```([^\n]*)\n([\s\S]*?)```/g;
     const blocks = [];
     src = src.replace(fence, (_, lang, code) => {
@@ -38,12 +37,14 @@
 
     src = src.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
       const cleanUrl = url.trim();
-      
+
       if (!isSafeUrl(cleanUrl)) {
         return linkText;
       }
-      
-      return `<a href="${esc(cleanUrl)}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+
+      return `<a href="${esc(
+        cleanUrl
+      )}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
     });
 
     src = src
@@ -55,13 +56,13 @@
     const out = [];
     let i = 0;
     const buf = [];
-    
+
     const flush = () => {
       if (!buf.length) return;
       out.push(`<p>${buf.join(" ")}</p>`);
       buf.length = 0;
     };
-    
+
     const list = (ordered) => {
       const tag = ordered ? "ol" : "ul";
       const items = [];
@@ -71,7 +72,7 @@
         const m2 = L.match(/^\s*\d+\.\s+(.*)$/);
         const ok = ordered ? !!m2 : !!m1;
         if (!ok) break;
-        items.push(`<li>${(m1?.[1] ?? m2?.[1])}</li>`);
+        items.push(`<li>${m1?.[1] ?? m2?.[1]}</li>`);
         i++;
       }
       if (items.length) out.push(`<${tag}>${items.join("")}</${tag}>`);
@@ -129,7 +130,7 @@
       const b = blocks[+n];
       return `<pre class="bj-code"><code class="lang-${b.lang}">${b.code}</code></pre>`;
     });
-    
+
     return html;
   }
 
@@ -158,24 +159,31 @@
   const scriptTag = document.currentScript;
   const ds = (scriptTag && scriptTag.dataset) || {};
   const globalCfg = window.BotJahlConfig || {};
+
+  // Theme-state: kan komma från BotJahlConfig eller från API:t
+  const themeState = {
+    launcherIcon: globalCfg.launcherIcon || "💬",
+    primaryColor: globalCfg.primaryColor || "",
+    userBubbleColor: globalCfg.userBubbleColor || "",
+    botBubbleColor: globalCfg.botBubbleColor || "",
+    fontFamily: globalCfg.fontFamily || ""
+  };
+
+  let launcherIconSpan = null;
+  let themeStyleEl = null;
+
   const isDemo =
-  globalCfg.demo === true ||
-  ds.demo === "1" ||
-  ds.demo === "true";
+    globalCfg.demo === true || ds.demo === "1" || ds.demo === "true";
 
-const previewFlag =
-  globalCfg.preview === true ||
-  ds.preview === "1" ||
-  ds.preview === "true";
+  const previewFlag =
+    globalCfg.preview === true || ds.preview === "1" || ds.preview === "true";
 
-const previewFrame =
-  globalCfg.previewFrame === true ||
-  ds.previewFrame === "1" ||
-  ds.previewFrame === "true";
+  const previewFrame =
+    globalCfg.previewFrame === true ||
+    ds.previewFrame === "1" ||
+    ds.previewFrame === "true";
 
-const feedbackSource = isDemo ? "demo" : (previewFlag ? "preview" : "prod");
-
-
+  const feedbackSource = isDemo ? "demo" : previewFlag ? "preview" : "prod";
 
   function trim(u) {
     return (u || "").replace(/\/+$/, "");
@@ -202,9 +210,9 @@ const feedbackSource = isDemo ? "demo" : (previewFlag ? "preview" : "prod");
 
   const sessionId = makeSessionId(customerId);
 
- // ---------- inject CSS ----------
-const style = document.createElement("style");
-style.textContent = `
+  // ---------- inject base CSS ----------
+  const style = document.createElement("style");
+  style.textContent = `
     /* ===== LAUNCHER (floating chattbubbla) ===== */
     .bj-launcher{
       position:fixed;
@@ -275,15 +283,15 @@ style.textContent = `
       box-shadow:0 10px 24px rgba(15,23,42,.7);
     }
 
-        /* ===== PANEL ===== */
+    /* ===== PANEL ===== */
     .bj-panel{
       position:fixed;
       right:1.5rem;
       bottom:5.4rem;
       width:min(400px,92vw);
-      height:min(520px,80vh);      /* fast höjd, passar i din iframe */
+      height:min(520px,80vh);
       border-radius:1.3rem;
-      overflow:hidden;             /* bara loggen scrollar */
+      overflow:hidden;
       box-shadow:0 20px 50px rgba(15,23,42,.8);
       background:#020617;
       z-index:999997;
@@ -307,8 +315,6 @@ style.textContent = `
         height:min(500px,78vh);
       }
     }
-
-
 
     /* ===== CLOSE BUTTON ===== */
     .bj-close{
@@ -489,7 +495,7 @@ style.textContent = `
       color:#9ca3af;
     }
 
-        /* ===== FEEDBACK (betyg + kommentar) ===== */
+    /* ===== FEEDBACK (betyg + kommentar) ===== */
     .bj-feedback{
       margin-top:.55rem;
       padding:.6rem .7rem;
@@ -575,9 +581,8 @@ style.textContent = `
       color:#9ca3af;
     }
     .bj-hidden{display:none;}
-`;
-document.head.appendChild(style);
-
+  `;
+  document.head.appendChild(style);
 
   // ---------- build DOM ----------
   const launcher = document.createElement("button");
@@ -585,8 +590,18 @@ document.head.appendChild(style);
   launcher.className = "bj-launcher " + (theme === "light" ? "light" : "dark");
   launcher.setAttribute("id", "bj-launcher");
   launcher.setAttribute("aria-label", "Öppna chatten");
-  launcher.innerHTML =
-    '<span class="bj-launcher-icon">💬</span><span class="bj-launcher-label">Chatt</span>';
+
+  const iconSpan = document.createElement("span");
+  iconSpan.className = "bj-launcher-icon";
+  iconSpan.textContent = themeState.launcherIcon || "💬";
+  launcherIconSpan = iconSpan;
+
+  const labelSpan = document.createElement("span");
+  labelSpan.className = "bj-launcher-label";
+  labelSpan.textContent = "Chatt";
+
+  launcher.appendChild(iconSpan);
+  launcher.appendChild(labelSpan);
 
   const panel = document.createElement("div");
   panel.className = "bj-panel";
@@ -601,7 +616,7 @@ document.head.appendChild(style);
   const wrap = document.createElement("div");
   wrap.className = "bj-wrap" + (theme === "dark" ? " bj-dark" : "");
 
-    wrap.innerHTML = `
+  wrap.innerHTML = `
     <div class="bj-card">
       <ul class="bj-log" id="bj-log"></ul>
       <form class="bj-bar" id="bj-form" autocomplete="off">
@@ -612,7 +627,7 @@ document.head.appendChild(style);
       </form>
     </div>
 
-        <!-- Feedback-panel under chatten -->
+    <!-- Feedback-panel under chatten -->
     <div class="bj-feedback bj-hidden" id="bj-feedback">
       <div class="bj-feedback-header">
         <p class="bj-feedback-title">Hur upplevde du hjälpen?</p>
@@ -642,10 +657,8 @@ document.head.appendChild(style);
       <div id="bj-feedback-status" class="bj-feedback-status"></div>
     </div>
 
-
     <p class="bj-status" id="bj-status"></p>
   `;
-
 
   panel.appendChild(closeBtn);
   panel.appendChild(wrap);
@@ -658,14 +671,17 @@ document.head.appendChild(style);
   const send = panel.querySelector("#bj-send");
   const statusEl = panel.querySelector("#bj-status");
 
-    // Feedback-element
-  const fbPanel   = panel.querySelector("#bj-feedback");
-  const fbStars   = fbPanel ? fbPanel.querySelectorAll("[data-rating]") : [];
-  const fbComment = fbPanel ? fbPanel.querySelector("#bj-feedback-comment") : null;
-  const fbSend    = fbPanel ? fbPanel.querySelector("#bj-feedback-send") : null;
-  const fbStatus  = fbPanel ? fbPanel.querySelector("#bj-feedback-status") : null;
-  const fbClose   = fbPanel ? fbPanel.querySelector("#bj-feedback-close") : null;
-
+  // Feedback-element
+  const fbPanel = panel.querySelector("#bj-feedback");
+  const fbStars = fbPanel ? fbPanel.querySelectorAll("[data-rating]") : [];
+  const fbComment = fbPanel
+    ? fbPanel.querySelector("#bj-feedback-comment")
+    : null;
+  const fbSend = fbPanel ? fbPanel.querySelector("#bj-feedback-send") : null;
+  const fbStatus = fbPanel
+    ? fbPanel.querySelector("#bj-feedback-status")
+    : null;
+  const fbClose = fbPanel ? fbPanel.querySelector("#bj-feedback-close") : null;
 
   function addMsg(role, text) {
     const li = document.createElement("li");
@@ -684,20 +700,18 @@ document.head.appendChild(style);
     li.className = "bj-msg bj-bot";
     const bub = document.createElement("div");
     bub.className = "bj-bub";
-    bub.innerHTML =
-      '<span class="bj-dots"><i></i><i></i><i></i></span>';
+    bub.innerHTML = '<span class="bj-dots"><i></i><i></i><i></i></span>';
     li.appendChild(bub);
     logEl.appendChild(li);
     logEl.scrollTop = logEl.scrollHeight;
     return () => li.remove();
   }
 
-    let PREVIEW_LOCK = false;
-    let answeredCount = 0; 
-    const FEEDBACK_AFTER = 3; 
+  let PREVIEW_LOCK = false;
+  let answeredCount = 0;
+  const FEEDBACK_AFTER = 3;
 
-
-    // ----- FEEDBACK -----
+  // ----- FEEDBACK -----
   let feedbackRating = 0;
   let feedbackShown = false;
   let feedbackDismissed = false;
@@ -719,13 +733,12 @@ document.head.appendChild(style);
     feedbackShown = true;
   }
 
-
   if (fbPanel && fbStars && fbStars.length) {
-    fbStars.forEach(btn => {
+    fbStars.forEach((btn) => {
       btn.addEventListener("click", () => {
         const r = parseInt(btn.getAttribute("data-rating") || "0", 10);
         feedbackRating = r;
-        fbStars.forEach(b => {
+        fbStars.forEach((b) => {
           const br = parseInt(b.getAttribute("data-rating") || "0", 10);
           b.classList.toggle("active", br <= r);
         });
@@ -746,13 +759,13 @@ document.head.appendChild(style);
 
     const body = {
       customerId,
-      source: feedbackSource, 
+      source: feedbackSource,
       rating: feedbackRating,
       comment: (() => {
         if (!fbComment) return null;
         let txt = (fbComment.value || "").trim();
         if (!txt) return null;
- 
+
         if (txt.length > 500) txt = txt.slice(0, 500);
         return txt;
       })(),
@@ -786,7 +799,7 @@ document.head.appendChild(style);
     });
   }
 
-    if (fbClose) {
+  if (fbClose) {
     fbClose.addEventListener("click", (e) => {
       e.preventDefault();
       fbPanel.classList.add("bj-hidden");
@@ -795,12 +808,10 @@ document.head.appendChild(style);
       try {
         sessionStorage.setItem("bj_feedback_hidden", "1");
       } catch {
-
+        // ignore
       }
     });
   }
-
-
 
   function lock(msg) {
     PREVIEW_LOCK = true;
@@ -827,58 +838,56 @@ document.head.appendChild(style);
   }
 
   async function askApi(message) {
-  const url = isDemo
-    ? `${API_BASE}/api/public/demo/chat`
-    : `${API_BASE}/api/chat`;
+    const url = isDemo
+      ? `${API_BASE}/api/public/demo/chat`
+      : `${API_BASE}/api/chat`;
 
-  const payload = isDemo
-    ? { message, sessionId }
-    : { message, customerId, sessionId, preview: !!previewFlag };
+    const payload = isDemo
+      ? { message, sessionId }
+      : { message, customerId, sessionId, preview: !!previewFlag };
 
-  const res = await fetchWithTimeout(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
+    const res = await fetchWithTimeout(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
 
-  let data = {};
-  try {
-    data = await res.json();
-  } catch {
-    data = {};
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
+
+    if (!res.ok || data?.error) {
+      if (res.status === 429) {
+        const msg = isDemo
+          ? data?.error || "Demot är begränsat till 6 frågor per besökare."
+          : data?.error ||
+            "Förhandsgränsen är nådd. För att fortsätta, uppgradera din plan eller bädda in på din egen domän.";
+        lock(msg);
+        throw new Error(msg);
+      }
+      if (res.status === 402) {
+        throw new Error(
+          data?.error ||
+            "Betalning saknas. Kontrollera din prenumeration i kundportalen."
+        );
+      }
+      if (res.status === 403) {
+        throw new Error(
+          data?.error ||
+            "Domänen verkar inte vara whitelistrad för den här boten."
+        );
+      }
+      throw new Error(data?.error || `HTTP ${res.status}`);
+    }
+
+    return data.reply;
   }
-
-  if (!res.ok || data?.error) {
-    if (res.status === 429) {
-      const msg = isDemo
-        ? data?.error ||
-          "Demot är begränsat till 6 frågor per besökare."
-        : data?.error ||
-          "Förhandsgränsen är nådd. För att fortsätta, uppgradera din plan eller bädda in på din egen domän.";
-      lock(msg);
-      throw new Error(msg);
-    }
-    if (res.status === 402) {
-      throw new Error(
-        data?.error ||
-          "Betalning saknas. Kontrollera din prenumeration i kundportalen."
-      );
-    }
-    if (res.status === 403) {
-      throw new Error(
-        data?.error ||
-          "Domänen verkar inte vara whitelistrad för den här boten."
-      );
-    }
-    throw new Error(data?.error || `HTTP ${res.status}`);
-  }
-
-  return data.reply;
-}
-
 
   function openPanel() {
     panel.classList.add("bj-open");
@@ -895,7 +904,7 @@ document.head.appendChild(style);
     else openPanel();
   });
   closeBtn.addEventListener("click", () => closePanel());
-  
+
   if (previewFrame) {
     openPanel();
   }
@@ -921,14 +930,11 @@ document.head.appendChild(style);
         stopTyping();
         addMsg("bot", reply);
 
-        
         answeredCount++;
         if (answeredCount >= FEEDBACK_AFTER) {
           ensureFeedbackVisible();
         }
       } catch (err) {
-
-
         stopTyping();
         let friendly =
           (err && err.message) || "Tekniskt fel, försök igen lite senare.";
@@ -948,4 +954,93 @@ document.head.appendChild(style);
       }
     });
   }
+
+  // ---------- THEME OVERRIDES ----------
+  function applyTheme() {
+    // Uppdatera ikon
+    if (launcherIconSpan && themeState.launcherIcon) {
+      launcherIconSpan.textContent = themeState.launcherIcon;
+    }
+
+    // Rensa ev gammalt override-style
+    if (themeStyleEl) {
+      try {
+        themeStyleEl.remove();
+      } catch {
+        // ignore
+      }
+      themeStyleEl = null;
+    }
+
+    let css = "";
+
+    function isSafeCss(v) {
+      return typeof v === "string" && v.length <= 100 && !/[{}<>]/.test(v);
+    }
+
+    const pc = themeState.primaryColor && themeState.primaryColor.trim();
+    const uc = themeState.userBubbleColor && themeState.userBubbleColor.trim();
+    const bc = themeState.botBubbleColor && themeState.botBubbleColor.trim();
+    const ff = themeState.fontFamily && themeState.fontFamily.trim();
+
+    if (isSafeCss(pc)) {
+      css += `
+.bj-launcher.light,
+.bj-launcher.dark{ background:${pc} !important; }
+.bj-btn{ background:${pc} !important; }
+.bj-feedback-send{ background:${pc} !important; }`;
+    }
+    if (isSafeCss(uc)) {
+      css += `
+.bj-user .bj-bub{ background:${uc} !important; }`;
+    }
+    if (isSafeCss(bc)) {
+      css += `
+.bj-bot .bj-bub{ background:${bc} !important; }`;
+    }
+    if (isSafeCss(ff)) {
+      css += `
+.bj-wrap{ font-family:${ff} !important; }`;
+    }
+
+    if (css) {
+      themeStyleEl = document.createElement("style");
+      themeStyleEl.textContent = css;
+      document.head.appendChild(themeStyleEl);
+    }
+  }
+
+  async function loadThemeFromApi() {
+    if (!API_BASE || !customerId) return;
+
+    try {
+      const url = `${API_BASE}/api/public/theme?customerId=${encodeURIComponent(
+        customerId
+      )}`;
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { Accept: "application/json" }
+      });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (!data) return;
+
+      if (data.launcherIcon) themeState.launcherIcon = data.launcherIcon;
+      if (data.primaryColor) themeState.primaryColor = data.primaryColor;
+      if (data.userBubbleColor)
+        themeState.userBubbleColor = data.userBubbleColor;
+      if (data.botBubbleColor) themeState.botBubbleColor = data.botBubbleColor;
+      if (data.fontFamily) themeState.fontFamily = data.fontFamily;
+
+      applyTheme();
+    } catch (err) {
+      // tyst fail – chatten funkar ändå med default
+      console.warn("[BotJahl] kunde inte hämta tema", err);
+    }
+  }
+
+  // Initiera tema
+  applyTheme();
+  loadThemeFromApi();
 })();
