@@ -169,6 +169,45 @@
     fontFamily: globalCfg.fontFamily || ""
   };
 
+  const ICON_PRESETS = {
+  "preset-yellow-outline": `
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="20" cy="20" r="18" fill="#ffd600" stroke="#000" stroke-width="3"/>
+      <rect x="13" y="13" width="14" height="10" rx="2" fill="none" stroke="#000" stroke-width="2"/>
+      <path d="M19 23 L18 26 L22 23" fill="#000"/>
+    </svg>
+  `,
+  "preset-yellow-solid": `
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="20" cy="20" r="18" fill="#ffd600"/>
+      <path d="M13 14h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-5l-3 3v-3h-6a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" fill="#000"/>
+      <circle cx="16" cy="18" r="1.2" fill="#ffd600"/>
+      <circle cx="20" cy="18" r="1.2" fill="#ffd600"/>
+      <circle cx="24" cy="18" r="1.2" fill="#ffd600"/>
+    </svg>
+  `,
+  "preset-red-solid": `
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="20" cy="20" r="18" fill="#e11d27"/>
+      <rect x="12" y="13" width="16" height="11" rx="2.2"
+            fill="none" stroke="#fff" stroke-width="2"/>
+      <path d="M18 24l2 3 2-3"
+            fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  `,
+  "preset-black-solid": `
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="20" cy="20" r="18" fill="#000"/>
+      <rect x="13" y="14" width="14" height="9" rx="2"
+            fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="17" cy="18" r="1" fill="#fff"/>
+      <circle cx="20" cy="18" r="1" fill="#fff"/>
+      <circle cx="23" cy="18" r="1" fill="#fff"/>
+    </svg>
+  `
+};
+
+
   let launcherIconSpan = null;
   let themeStyleEl = null;
 
@@ -581,6 +620,12 @@
       color:#9ca3af;
     }
     .bj-hidden{display:none;}
+
+    .bj-launcher-icon-svg svg{
+      width: 24px;
+      height: 24px;
+      display: block;
+    }
   `;
   document.head.appendChild(style);
 
@@ -591,10 +636,19 @@
   launcher.setAttribute("id", "bj-launcher");
   launcher.setAttribute("aria-label", "Öppna chatten");
 
-  const iconSpan = document.createElement("span");
-  iconSpan.className = "bj-launcher-icon";
-  iconSpan.textContent = themeState.launcherIcon || "💬";
-  launcherIconSpan = iconSpan;
+const iconSpan = document.createElement("span");
+iconSpan.className = "bj-launcher-icon";
+
+const iconKey = (themeState.launcherIcon || "").trim();
+if (ICON_PRESETS[iconKey]) {
+  iconSpan.classList.add("bj-launcher-icon-svg");
+  iconSpan.innerHTML = ICON_PRESETS[iconKey];
+} else {
+  // fallback: emoji
+  iconSpan.textContent = iconKey || "💬";
+}
+launcherIconSpan = iconSpan;
+
 
   const labelSpan = document.createElement("span");
   labelSpan.className = "bj-launcher-label";
