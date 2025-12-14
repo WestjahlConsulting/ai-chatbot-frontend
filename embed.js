@@ -922,13 +922,13 @@ function addMsg(role, text) {
       ? String(window.BotJahlConfig.greeting)
       : "Hej! Hur kan vi hjälpa dig idag?";
   addMsg("bot", firstGreeting);
-
-  <div class="bj-ai-badge" tabindex="0">
-    AI-genererat svar
-    <span class="bj-ai-tooltip">
-      Detta svar är genererat av en AI och baseras på företagets dokument och innehåll.
-    </span>
-  </div>
+    function fetchWithTimeout(url, options = {}, ms = 20000) {
+    const ctl = new AbortController();
+    const id = setTimeout(() => ctl.abort(), ms);
+    return fetch(url, { ...options, signal: ctl.signal }).finally(() =>
+      clearTimeout(id)
+    );
+  }
 
 
   function fetchWithTimeout(url, options = {}, ms = 20000) {
@@ -998,21 +998,32 @@ function addMsg(role, text) {
     }
   }
 
-  function showAiIntroIfNeeded(container) {
-  const key = "bj_ai_intro_seen";
-  if (sessionStorage.getItem(key)) return;
+  function showAiIntroIfNeeded(logUl) {
+    const key = "bj_ai_intro_seen";
+    if (sessionStorage.getItem(key)) return;
 
-  const intro = document.createElement("div");
-  intro.className = "bj-ai-intro";
-  intro.innerHTML = `
-    <strong>Hej!</strong><br/>
-    Jag är en <strong>AI-assistent</strong> som svarar baserat på företagets dokument och webbplats.
-    Informationen kan vara ofullständig – kontrollera alltid viktiga uppgifter.
-  `;
+    const li = document.createElement("li");
+    li.className = "bj-msg bj-bot";
 
-  container.prepend(intro);
-  sessionStorage.setItem(key, "1");
-}
+    const bub = document.createElement("div");
+    bub.className = "bj-bub";
+
+    const intro = document.createElement("div");
+    intro.className = "bj-ai-intro";
+    intro.innerHTML = `
+      <strong>Hej!</strong><br/>
+      Jag är en <strong>AI-assistent</strong> som svarar baserat på företagets dokument och webbplats.
+      Informationen kan vara ofullständig – kontrollera alltid viktiga uppgifter.
+    `;
+
+    bub.appendChild(intro);
+    li.appendChild(bub);
+
+    logUl.insertBefore(li, logUl.firstChild);
+
+    sessionStorage.setItem(key, "1");
+  }
+
 
 
   function closePanel() {
