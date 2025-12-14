@@ -4,13 +4,15 @@
 
   // ---------- helpers ----------
   const esc = (s) =>
-    (s ?? "").replace(/[&<>"']/g, (c) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[c]));
+    (s ?? "").replace(/[&<>"']/g, (c) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[c])
+    );
 
   function isSafeUrl(url) {
     if (!url || typeof url !== "string") return false;
@@ -35,18 +37,16 @@
 
     src = esc(src);
 
+    // Länkar
     src = src.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
       const cleanUrl = url.trim();
-
-      if (!isSafeUrl(cleanUrl)) {
-        return linkText;
-      }
-
+      if (!isSafeUrl(cleanUrl)) return linkText;
       return `<a href="${esc(
         cleanUrl
       )}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
     });
 
+    // Bold / italic / inline-code
     src = src
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       .replace(/\*([^*]+)\*/g, "<em>$1</em>")
@@ -162,51 +162,12 @@
 
   // Theme-state: kan komma från BotJahlConfig eller från API:t
   const themeState = {
-    launcherIcon: globalCfg.launcherIcon || "💬",
+    launcherIcon: globalCfg.launcherIcon || "💬", // kan bli "preset:bubble" etc
     primaryColor: globalCfg.primaryColor || "",
     userBubbleColor: globalCfg.userBubbleColor || "",
     botBubbleColor: globalCfg.botBubbleColor || "",
     fontFamily: globalCfg.fontFamily || ""
   };
-
-  const ICON_PRESETS = {
-  "preset-yellow-outline": `
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      <circle cx="20" cy="20" r="18" fill="#ffd600" stroke="#000" stroke-width="3"/>
-      <rect x="13" y="13" width="14" height="10" rx="2" fill="none" stroke="#000" stroke-width="2"/>
-      <path d="M19 23 L18 26 L22 23" fill="#000"/>
-    </svg>
-  `,
-  "preset-yellow-solid": `
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      <circle cx="20" cy="20" r="18" fill="#ffd600"/>
-      <path d="M13 14h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-5l-3 3v-3h-6a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" fill="#000"/>
-      <circle cx="16" cy="18" r="1.2" fill="#ffd600"/>
-      <circle cx="20" cy="18" r="1.2" fill="#ffd600"/>
-      <circle cx="24" cy="18" r="1.2" fill="#ffd600"/>
-    </svg>
-  `,
-  "preset-red-solid": `
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      <circle cx="20" cy="20" r="18" fill="#e11d27"/>
-      <rect x="12" y="13" width="16" height="11" rx="2.2"
-            fill="none" stroke="#fff" stroke-width="2"/>
-      <path d="M18 24l2 3 2-3"
-            fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-  `,
-  "preset-black-solid": `
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      <circle cx="20" cy="20" r="18" fill="#000"/>
-      <rect x="13" y="14" width="14" height="9" rx="2"
-            fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="17" cy="18" r="1" fill="#fff"/>
-      <circle cx="20" cy="18" r="1" fill="#fff"/>
-      <circle cx="23" cy="18" r="1" fill="#fff"/>
-    </svg>
-  `
-};
-
 
   let launcherIconSpan = null;
   let themeStyleEl = null;
@@ -273,15 +234,15 @@
     }
 
     .bj-launcher-icon{
-      width:26px;
-      height:26px;
+      width:32px;
+      height:32px;
       border-radius:999px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
       background:rgba(15,23,42,.9);
       color:#f9fafb;
-      font-size:18px;
+      font-size:20px;
       flex-shrink:0;
     }
 
@@ -300,6 +261,9 @@
         width:auto;
       }
       .bj-launcher-label{ display:inline; }
+      .bj-launcher.bj-no-label .bj-launcher-label{
+        display:none !important;
+      }
     }
 
     /* Colors */
@@ -622,9 +586,9 @@
     .bj-hidden{display:none;}
 
     .bj-launcher-icon-svg svg{
-      width: 24px;
-      height: 24px;
-      display: block;
+      width:22px;
+      height:22px;
+      display:block;
     }
   `;
   document.head.appendChild(style);
@@ -636,26 +600,21 @@
   launcher.setAttribute("id", "bj-launcher");
   launcher.setAttribute("aria-label", "Öppna chatten");
 
-const iconSpan = document.createElement("span");
-iconSpan.className = "bj-launcher-icon";
-
-const iconKey = (themeState.launcherIcon || "").trim();
-if (ICON_PRESETS[iconKey]) {
-  iconSpan.classList.add("bj-launcher-icon-svg");
-  iconSpan.innerHTML = ICON_PRESETS[iconKey];
-} else {
-  // fallback: emoji
-  iconSpan.textContent = iconKey || "💬";
-}
-launcherIconSpan = iconSpan;
-
+  const iconSpan = document.createElement("span");
+  iconSpan.className = "bj-launcher-icon";
+  launcherIconSpan = iconSpan;
 
   const labelSpan = document.createElement("span");
   labelSpan.className = "bj-launcher-label";
-  labelSpan.textContent = "Chatt";
+  labelSpan.textContent = isDemo ? "Testa demot" : "Chatt";
 
   launcher.appendChild(iconSpan);
   launcher.appendChild(labelSpan);
+
+  if (!isDemo) {
+    // Dölj text på alla "riktiga" bots, visa bara ikon
+    launcher.classList.add("bj-no-label");
+  }
 
   const panel = document.createElement("div");
   panel.className = "bj-panel";
@@ -819,7 +778,6 @@ launcherIconSpan = iconSpan;
         if (!fbComment) return null;
         let txt = (fbComment.value || "").trim();
         if (!txt) return null;
-
         if (txt.length > 500) txt = txt.slice(0, 500);
         return txt;
       })(),
@@ -858,7 +816,6 @@ launcherIconSpan = iconSpan;
       e.preventDefault();
       fbPanel.classList.add("bj-hidden");
       feedbackDismissed = true;
-
       try {
         sessionStorage.setItem("bj_feedback_hidden", "1");
       } catch {
@@ -1009,12 +966,85 @@ launcherIconSpan = iconSpan;
     });
   }
 
+  // ---------- Launcher-icon rendering ----------
+  function renderLauncherIcon() {
+    if (!launcherIconSpan) return;
+
+    let raw = (themeState.launcherIcon || "").trim();
+
+    // Bakåtkomp för gamla värden
+    if (
+      raw === "preset-yellow-solid" ||
+      raw === "preset-yellow-outline" ||
+      raw === "preset-red-solid" ||
+      raw === "preset-black-solid"
+    ) {
+      raw = "preset:bubble";
+    }
+
+    launcherIconSpan.classList.remove("bj-launcher-icon-svg");
+    launcherIconSpan.innerHTML = "";
+    launcherIconSpan.textContent = "";
+
+    // Emoji-läge (allt som inte börjar med "preset:")
+    if (!raw || !raw.startsWith("preset:")) {
+      launcherIconSpan.textContent = raw || "💬";
+      return;
+    }
+
+    const inner = document.createElement("span");
+    inner.className = "bj-launcher-icon-svg";
+
+    let svg = "";
+    switch (raw) {
+      case "preset:chat":
+        svg = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="5" width="16" height="11" rx="3" ry="3"
+                  fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="9" cy="11" r="1.3" fill="currentColor"></circle>
+            <circle cx="15" cy="11" r="1.3" fill="currentColor"></circle>
+          </svg>`;
+        break;
+
+      case "preset:robot":
+        svg = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5" y="7" width="14" height="10" rx="3" ry="3"
+                  fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="10" cy="12" r="1.3" fill="currentColor"></circle>
+            <circle cx="14" cy="12" r="1.3" fill="currentColor"></circle>
+            <path d="M9 16h6" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round"/>
+          </svg>`;
+        break;
+
+      case "preset:bolt":
+        svg = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <polygon points="11 3 6 13 11 13 9 21 18 9 13 9 15 3"
+                     fill="currentColor"></polygon>
+          </svg>`;
+        break;
+
+      case "preset:bubble":
+      default:
+        svg = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 6h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-7l-4 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"
+                  fill="currentColor"></path>
+          </svg>`;
+        break;
+    }
+
+    inner.innerHTML = svg;
+    launcherIconSpan.appendChild(inner);
+  }
+
   // ---------- THEME OVERRIDES ----------
   function applyTheme() {
-    // Uppdatera ikon
-    if (launcherIconSpan && themeState.launcherIcon) {
-      launcherIconSpan.textContent = themeState.launcherIcon;
-    }
+    // Uppdatera ikon (emoji eller preset)
+    renderLauncherIcon();
 
     // Rensa ev gammalt override-style
     if (themeStyleEl) {
