@@ -213,45 +213,59 @@
   // ---------- inject base CSS ----------
   const style = document.createElement("style");
   style.textContent = `
-    /* ===== LAUNCHER (floating chattbubbla) ===== */
+    /* ===== LAUNCHER (floating ikon) ===== */
     .bj-launcher{
       position:fixed;
       right:1.5rem;
       bottom:1.5rem;
-      min-width:56px;
-      height:56px;
-      border-radius:999px;
       border:none;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 12px 30px rgba(15,23,42,.55);
-      z-index:999998;
-      transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
       padding:0;
-      overflow:hidden;
+      cursor:pointer;
+      background:transparent;
+      z-index:999998;
     }
 
     .bj-launcher-icon{
-      width:32px;
-      height:32px;
+      width:52px;
+      height:52px;
       border-radius:999px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      background:rgba(15,23,42,.9);
+      background:#2563eb;        /* används när man kör emoji-läge */
       color:#f9fafb;
-      font-size:20px;
-      flex-shrink:0;
+      font-size:22px;
+      box-shadow:0 12px 30px rgba(15,23,42,.55);
+      transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
     }
 
+    .bj-launcher:hover .bj-launcher-icon{
+      transform:translateY(-2px);
+      box-shadow:0 18px 40px rgba(15,23,42,.7);
+      filter:brightness(1.05);
+    }
+    .bj-launcher:active .bj-launcher-icon{
+      transform:translateY(0);
+      box-shadow:0 10px 24px rgba(15,23,42,.7);
+    }
+
+    /* SVG-läge: ingen extra bubbla runt ikonen */
+    .bj-launcher-svg .bj-launcher-icon{
+      background:transparent !important;
+      box-shadow:none;
+      width:auto;
+      height:auto;
+    }
+
+    /* vi använder inte label längre, men behåller klass ifall något gammalt CSS pekar på den */
     .bj-launcher-label{
-      display:none;
-      margin-left:.55rem;
-      font-size:.95rem;
-      font-weight:600;
-      white-space:nowrap;
+      display:none !important;
+    }
+
+    .bj-launcher-icon-svg svg{
+      width:40px;
+      height:40px;
+      display:block;
     }
 
     /* Desktop → gör bubblan till "pill button" */
@@ -585,18 +599,13 @@
     }
     .bj-hidden{display:none;}
 
-    .bj-launcher-icon-svg svg{
-      width:22px;
-      height:22px;
-      display:block;
-    }
   `;
   document.head.appendChild(style);
 
   // ---------- build DOM ----------
   const launcher = document.createElement("button");
   launcher.type = "button";
-  launcher.className = "bj-launcher " + (theme === "light" ? "light" : "dark");
+  launcher.className = "bj-launcher";
   launcher.setAttribute("id", "bj-launcher");
   launcher.setAttribute("aria-label", "Öppna chatten");
 
@@ -604,12 +613,10 @@
   iconSpan.className = "bj-launcher-icon";
   launcherIconSpan = iconSpan;
 
-  const labelSpan = document.createElement("span");
-  labelSpan.className = "bj-launcher-label";
-  labelSpan.textContent = isDemo ? "Testa demot" : "Chatt";
-
+  // INGEN label-text längre – endast ikon
   launcher.appendChild(iconSpan);
-  launcher.appendChild(labelSpan);
+
+  //launcher.appendChild(labelSpan);
 
   if (!isDemo) {
     // Dölj text på alla "riktiga" bots, visa bara ikon
@@ -967,132 +974,118 @@
   }
 
   // ---------- Launcher-icon rendering ----------
-  function renderLauncherIcon() {
+   function renderLauncherIcon() {
     if (!launcherIconSpan) return;
 
-    let raw = (themeState.launcherIcon || "").trim();
-
-    // Bakåtkomp för gamla värden
-    if (
-      raw === "preset-yellow-solid" ||
-      raw === "preset-yellow-outline" ||
-      raw === "preset-red-solid" ||
-      raw === "preset-black-solid"
-    ) {
-      raw = "preset:bubble";
-    }
-
-    launcherIconSpan.classList.remove("bj-launcher-icon-svg");
-    launcherIconSpan.innerHTML = "";
-    launcherIconSpan.textContent = "";
-
-    // Emoji-läge (allt som inte börjar med "preset:")
-    if (!raw || !raw.startsWith("preset:")) {
-      launcherIconSpan.textContent = raw || "💬";
-      return;
-    }
-
-    const inner = document.createElement("span");
-    inner.className = "bj-launcher-icon-svg";
-
+    const raw = (themeState.launcherIcon || "").trim() || "preset:bubble";
     let svg = "";
+
     switch (raw) {
       case "preset:chat":
         svg = `
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="4" y="5" width="16" height="11" rx="3" ry="3"
-                  fill="none" stroke="currentColor" stroke-width="2"/>
-            <circle cx="9" cy="11" r="1.3" fill="currentColor"></circle>
-            <circle cx="15" cy="11" r="1.3" fill="currentColor"></circle>
+          <svg viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="18" fill="#0b1120"/>
+            <path d="M13 14h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-6l-4 3v-3h-4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z"
+                  fill="#f9fafb"/>
           </svg>`;
         break;
 
       case "preset:robot":
         svg = `
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="5" y="7" width="14" height="10" rx="3" ry="3"
-                  fill="none" stroke="currentColor" stroke-width="2"/>
-            <circle cx="10" cy="12" r="1.3" fill="currentColor"></circle>
-            <circle cx="14" cy="12" r="1.3" fill="currentColor"></circle>
-            <path d="M9 16h6" stroke="currentColor" stroke-width="1.6"
-                  stroke-linecap="round"/>
+          <svg viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="18" fill="#111827"/>
+            <rect x="11" y="14" width="18" height="12" rx="4" fill="#e5e7eb"/>
+            <circle cx="17" cy="19" r="1.6" fill="#0f172a"/>
+            <circle cx="23" cy="19" r="1.6" fill="#0f172a"/>
+            <rect x="17" y="23" width="6" height="1.4" rx="0.7" fill="#0f172a"/>
           </svg>`;
         break;
 
       case "preset:bolt":
         svg = `
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <polygon points="11 3 6 13 11 13 9 21 18 9 13 9 15 3"
-                     fill="currentColor"></polygon>
+          <svg viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="18" fill="#111827"/>
+            <path d="M22 10l-10 12h6l-2 8 10-13h-6z" fill="#facc15"/>
           </svg>`;
         break;
 
       case "preset:bubble":
       default:
         svg = `
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 6h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-7l-4 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"
-                  fill="currentColor"></path>
+          <svg viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="18" fill="#111827"/>
+            <rect x="12" y="13" width="16" height="11" rx="3"
+                  fill="#0b1120" stroke="#f9fafb" stroke-width="2"/>
           </svg>`;
         break;
     }
 
-    inner.innerHTML = svg;
-    launcherIconSpan.appendChild(inner);
+    if (svg) {
+      // preset-läge: använd ren SVG, ingen extra “vit bubbla”
+      launcher.classList.add("bj-launcher-svg");
+      launcherIconSpan.classList.add("bj-launcher-icon-svg");
+      launcherIconSpan.innerHTML = svg;
+    } else {
+      // fallback: emoji / text
+      launcher.classList.remove("bj-launcher-svg");
+      launcherIconSpan.classList.remove("bj-launcher-icon-svg");
+      launcherIconSpan.textContent = raw || "💬";
+    }
   }
+
 
   // ---------- THEME OVERRIDES ----------
-  function applyTheme() {
-    // Uppdatera ikon (emoji eller preset)
-    renderLauncherIcon();
+    function applyTheme() {
+      // Uppdatera ikon (emoji eller preset)
+      renderLauncherIcon();
 
-    // Rensa ev gammalt override-style
-    if (themeStyleEl) {
-      try {
-        themeStyleEl.remove();
-      } catch {
-        // ignore
+      // Rensa ev gammalt override-style
+      if (themeStyleEl) {
+        try { themeStyleEl.remove(); } catch {}
+        themeStyleEl = null;
       }
-      themeStyleEl = null;
+
+      let css = "";
+
+      function isSafeCss(v) {
+        return typeof v === "string" && v.length <= 100 && !/[{}<>]/.test(v);
+      }
+
+      const pc = themeState.primaryColor && themeState.primaryColor.trim();
+      const uc = themeState.userBubbleColor && themeState.userBubbleColor.trim();
+      const bc = themeState.botBubbleColor && themeState.botBubbleColor.trim();
+      const ff = themeState.fontFamily && themeState.fontFamily.trim();
+
+      // Primärfärg → emoji-bubbla + knappar (inte SVG-presets)
+      if (isSafeCss(pc)) {
+        css += `
+  .bj-launcher-icon{ background:${pc} !important; }
+  .bj-btn{ background:${pc} !important; }
+  .bj-feedback-send{ background:${pc} !important; }`;
+      }
+
+      if (isSafeCss(uc)) {
+        css += `
+  .bj-user .bj-bub{ background:${uc} !important; }`;
+      }
+
+      if (isSafeCss(bc)) {
+        css += `
+  .bj-bot .bj-bub{ background:${bc} !important; }`;
+      }
+
+      if (isSafeCss(ff)) {
+        css += `
+  .bj-wrap{ font-family:${ff} !important; }`;
+      }
+
+      if (css) {
+        themeStyleEl = document.createElement("style");
+        themeStyleEl.textContent = css;
+        document.head.appendChild(themeStyleEl);
+      }
     }
 
-    let css = "";
-
-    function isSafeCss(v) {
-      return typeof v === "string" && v.length <= 100 && !/[{}<>]/.test(v);
-    }
-
-    const pc = themeState.primaryColor && themeState.primaryColor.trim();
-    const uc = themeState.userBubbleColor && themeState.userBubbleColor.trim();
-    const bc = themeState.botBubbleColor && themeState.botBubbleColor.trim();
-    const ff = themeState.fontFamily && themeState.fontFamily.trim();
-
-    if (isSafeCss(pc)) {
-      css += `
-.bj-launcher.light,
-.bj-launcher.dark{ background:${pc} !important; }
-.bj-btn{ background:${pc} !important; }
-.bj-feedback-send{ background:${pc} !important; }`;
-    }
-    if (isSafeCss(uc)) {
-      css += `
-.bj-user .bj-bub{ background:${uc} !important; }`;
-    }
-    if (isSafeCss(bc)) {
-      css += `
-.bj-bot .bj-bub{ background:${bc} !important; }`;
-    }
-    if (isSafeCss(ff)) {
-      css += `
-.bj-wrap{ font-family:${ff} !important; }`;
-    }
-
-    if (css) {
-      themeStyleEl = document.createElement("style");
-      themeStyleEl.textContent = css;
-      document.head.appendChild(themeStyleEl);
-    }
-  }
 
   async function loadThemeFromApi() {
     if (!API_BASE || !customerId) return;
