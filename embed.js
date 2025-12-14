@@ -599,6 +599,16 @@
     }
     .bj-hidden{display:none;}
 
+    .bj-ai-intro {
+      background: rgba(96,165,250,.12);
+      border: 1px solid rgba(96,165,250,.25);
+      color: #e5e7eb;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      margin-bottom: 10px;
+    }
   `;
   document.head.appendChild(style);
 
@@ -847,6 +857,14 @@
       : "Hej! Hur kan vi hjälpa dig idag?";
   addMsg("bot", firstGreeting);
 
+  <div class="bj-ai-badge" tabindex="0">
+    AI-genererat svar
+    <span class="bj-ai-tooltip">
+      Detta svar är genererat av en AI och baseras på företagets dokument och innehåll.
+    </span>
+  </div>
+
+
   function fetchWithTimeout(url, options = {}, ms = 20000) {
     const ctl = new AbortController();
     const id = setTimeout(() => ctl.abort(), ms);
@@ -913,18 +931,36 @@
       setTimeout(() => input.focus(), 50);
     }
   }
+
+  function showAiIntroIfNeeded(container) {
+  const key = "bj_ai_intro_seen";
+  if (sessionStorage.getItem(key)) return;
+
+  const intro = document.createElement("div");
+  intro.className = "bj-ai-intro";
+  intro.innerHTML = `
+    <strong>Hej!</strong><br/>
+    Jag är en <strong>AI-assistent</strong> som svarar baserat på företagets dokument och webbplats.
+    Informationen kan vara ofullständig – kontrollera alltid viktiga uppgifter.
+  `;
+
+  container.prepend(intro);
+  sessionStorage.setItem(key, "1");
+}
+
+
   function closePanel() {
     panel.classList.remove("bj-open");
   }
 
   launcher.addEventListener("click", () => {
     if (panel.classList.contains("bj-open")) closePanel();
-    else openPanel();
+    else openPanel(), showAiIntroIfNeeded();
   });
   closeBtn.addEventListener("click", () => closePanel());
 
   if (previewFrame) {
-    openPanel();
+    openPanel(), showAiIntroIfNeeded();
   }
 
   if (form) {
