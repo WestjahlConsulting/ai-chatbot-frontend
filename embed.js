@@ -609,6 +609,54 @@
       line-height: 1.45;
       margin-bottom: 10px;
     }
+      /* ===== AI BADGE & TOOLTIP ===== */
+    .bj-ai-badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10px;
+      color: #64748b;
+      cursor: help;
+      position: relative;
+      border: 1px solid #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #f8fafc;
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .bj-ai-tooltip {
+      visibility: hidden;
+      width: 180px;
+      background-color: #1e293b;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 10;
+      bottom: 125%; /* Placera ovanför märket */
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+      font-size: 11px;
+      line-height: 1.4;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      pointer-events: none;
+    }
+
+    .bj-ai-badge:hover .bj-ai-tooltip,
+    .bj-ai-badge:focus .bj-ai-tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Mörk läge-justering */
+    .bj-dark .bj-ai-badge {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+      color: #94a3b8;
+    }
   `;
   document.head.appendChild(style);
 
@@ -713,13 +761,31 @@
     : null;
   const fbClose = fbPanel ? fbPanel.querySelector("#bj-feedback-close") : null;
 
-  function addMsg(role, text) {
+function addMsg(role, text) {
     const li = document.createElement("li");
     li.className = "bj-msg " + (role === "user" ? "bj-user" : "bj-bot");
+    
     const bub = document.createElement("div");
     bub.className = "bj-bub";
-    if (role === "user") bub.textContent = text;
-    else bub.innerHTML = mdToHtml(text);
+    
+    if (role === "user") {
+      bub.textContent = text;
+    } else {
+      bub.innerHTML = mdToHtml(text);
+      
+      const badge = document.createElement("div");
+      badge.className = "bj-ai-badge";
+      badge.setAttribute("tabindex", "0");
+      badge.innerHTML = `
+        AI-genererat svar
+        <span class="bj-ai-tooltip">
+          Detta svar är genererat av en AI och baseras på företagets dokument och innehåll.
+        </span>
+      `;
+      
+      bub.appendChild(badge);
+    }
+    
     li.appendChild(bub);
     logEl.appendChild(li);
     logEl.scrollTop = logEl.scrollHeight;
@@ -954,13 +1020,19 @@
   }
 
   launcher.addEventListener("click", () => {
-    if (panel.classList.contains("bj-open")) closePanel();
-    else openPanel(), showAiIntroIfNeeded();
+    if (panel.classList.contains("bj-open")) {
+      closePanel();
+    } else {
+      openPanel();
+      showAiIntroIfNeeded(logEl); 
+    }
   });
+
   closeBtn.addEventListener("click", () => closePanel());
 
   if (previewFrame) {
-    openPanel(), showAiIntroIfNeeded();
+    openPanel();
+    showAiIntroIfNeeded(logEl); 
   }
 
   if (form) {
